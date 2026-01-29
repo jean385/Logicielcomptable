@@ -1,0 +1,807 @@
+/**
+ * Module Paramètres
+ * Configuration de l'entreprise, plan comptable, taxes
+ */
+
+const Parametres = {
+    /**
+     * Affiche le module Paramètres
+     */
+    afficher() {
+        App.afficherPage('module-parametres');
+
+        const container = document.getElementById('module-parametres');
+        container.innerHTML = `
+            <div class="module-header">
+                <h1>Paramètres</h1>
+                <button class="btn-retour" onclick="App.retourAccueil()">
+                    ← Retour
+                </button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
+                <button class="tab" onclick="Parametres.afficherOnglet('plan-comptable')">Plan comptable</button>
+                <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
+                <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
+                <button class="tab" onclick="Parametres.afficherOnglet('projets')">Projets</button>
+            </div>
+
+            <div id="tab-entreprise" class="tab-content active">
+                ${this.renderEntreprise()}
+            </div>
+
+            <div id="tab-plan-comptable" class="tab-content">
+                ${this.renderPlanComptable()}
+            </div>
+
+            <div id="tab-taxes" class="tab-content">
+                ${this.renderTaxes()}
+            </div>
+
+            <div id="tab-exercice" class="tab-content">
+                ${this.renderExercice()}
+            </div>
+
+            <div id="tab-projets" class="tab-content">
+                ${this.renderProjets()}
+            </div>
+        `;
+    },
+
+    /**
+     * Affiche un onglet spécifique
+     */
+    afficherOnglet(onglet) {
+        document.querySelectorAll('#module-parametres .tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#module-parametres .tab-content').forEach(c => c.classList.remove('active'));
+
+        document.querySelector(`#module-parametres [onclick="Parametres.afficherOnglet('${onglet}')"]`).classList.add('active');
+        document.getElementById('tab-' + onglet).classList.add('active');
+
+        if (onglet === 'projets') {
+            document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        }
+    },
+
+    /**
+     * Render formulaire entreprise enrichi avec sections
+     */
+    renderEntreprise() {
+        const entreprise = Storage.get('entreprise') || {};
+
+        const provinces = [
+            { code: 'QC', nom: 'Québec' },
+            { code: 'ON', nom: 'Ontario' },
+            { code: 'BC', nom: 'Colombie-Britannique' },
+            { code: 'AB', nom: 'Alberta' },
+            { code: 'SK', nom: 'Saskatchewan' },
+            { code: 'MB', nom: 'Manitoba' },
+            { code: 'NB', nom: 'Nouveau-Brunswick' },
+            { code: 'NS', nom: 'Nouvelle-Écosse' },
+            { code: 'PE', nom: 'Île-du-Prince-Édouard' },
+            { code: 'NL', nom: 'Terre-Neuve-et-Labrador' },
+            { code: 'YT', nom: 'Yukon' },
+            { code: 'NT', nom: 'Territoires du Nord-Ouest' },
+            { code: 'NU', nom: 'Nunavut' }
+        ];
+
+        const provinceOptions = provinces.map(p =>
+            `<option value="${p.code}" ${(entreprise.province || 'QC') === p.code ? 'selected' : ''}>${p.nom}</option>`
+        ).join('');
+
+        return `
+            <div class="rapport-container">
+                <h3>Informations de l'entreprise</h3>
+                <form id="form-entreprise" onsubmit="Parametres.sauvegarderEntreprise(event)">
+
+                    <div class="form-section">
+                        <h4>Identification</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nom commercial *</label>
+                                <input type="text" id="ent-nomCommercial" value="${entreprise.nomCommercial || entreprise.nom || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Raison sociale</label>
+                                <input type="text" id="ent-raisonSociale" value="${entreprise.raisonSociale || ''}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>NEQ (Numéro d'entreprise du Québec)</label>
+                                <input type="text" id="ent-neq" value="${entreprise.neq || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Date de création de l'entreprise</label>
+                                <input type="date" id="ent-dateCreation" value="${entreprise.dateCreationEntreprise || ''}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Numéros de taxes</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Numéro de TPS</label>
+                                <input type="text" id="ent-tps" value="${entreprise.tps || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Numéro de TVQ</label>
+                                <input type="text" id="ent-tvq" value="${entreprise.tvq || ''}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Adresse</h4>
+                        <div class="form-group">
+                            <label>Adresse</label>
+                            <input type="text" id="ent-adresse" value="${entreprise.adresse || ''}">
+                        </div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label>Ville</label>
+                                <input type="text" id="ent-ville" value="${entreprise.ville || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Province</label>
+                                <select id="ent-province">
+                                    ${provinceOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Code postal</label>
+                                <input type="text" id="ent-codePostal" value="${entreprise.codePostal || ''}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Pays</label>
+                            <input type="text" id="ent-pays" value="${entreprise.pays || 'Canada'}">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contact</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Téléphone</label>
+                                <input type="tel" id="ent-telephone" value="${entreprise.telephone || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Télécopieur</label>
+                                <input type="tel" id="ent-telecopieur" value="${entreprise.telecopieur || ''}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Courriel</label>
+                                <input type="email" id="ent-courriel" value="${entreprise.courriel || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Site Web</label>
+                                <input type="text" id="ent-siteWeb" value="${entreprise.siteWeb || ''}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </form>
+            </div>
+        `;
+    },
+
+    /**
+     * Sauvegarde les infos entreprise (schéma enrichi)
+     * Synchronise aussi le nom dans le registre des dossiers
+     */
+    sauvegarderEntreprise(event) {
+        event.preventDefault();
+
+        const entreprise = {
+            nomCommercial: document.getElementById('ent-nomCommercial').value.trim(),
+            raisonSociale: document.getElementById('ent-raisonSociale').value.trim(),
+            neq: document.getElementById('ent-neq').value.trim(),
+            dateCreationEntreprise: document.getElementById('ent-dateCreation').value,
+            tps: document.getElementById('ent-tps').value.trim(),
+            tvq: document.getElementById('ent-tvq').value.trim(),
+            adresse: document.getElementById('ent-adresse').value.trim(),
+            ville: document.getElementById('ent-ville').value.trim(),
+            province: document.getElementById('ent-province').value,
+            codePostal: document.getElementById('ent-codePostal').value.trim(),
+            pays: document.getElementById('ent-pays').value.trim(),
+            telephone: document.getElementById('ent-telephone').value.trim(),
+            telecopieur: document.getElementById('ent-telecopieur').value.trim(),
+            courriel: document.getElementById('ent-courriel').value.trim(),
+            siteWeb: document.getElementById('ent-siteWeb').value.trim()
+        };
+
+        Storage.set('entreprise', entreprise);
+
+        // Mettre à jour le nom dans la barre de menu
+        document.getElementById('entreprise-nom').textContent = entreprise.nomCommercial;
+
+        // Synchroniser le nom dans le registre des dossiers
+        if (Storage.activeDossierId) {
+            Storage.renommerDossier(Storage.activeDossierId, entreprise.nomCommercial);
+        }
+
+        App.notification('Informations enregistrées avec succès', 'success');
+    },
+
+    /**
+     * Render plan comptable
+     */
+    renderPlanComptable() {
+        const comptes = Compte.getAll();
+
+        let tableRows = '';
+        comptes.forEach(c => {
+            const typeClasse = c.actif ? '' : 'style="opacity: 0.5"';
+            tableRows += `
+                <tr ${typeClasse}>
+                    <td>${c.numero}</td>
+                    <td>${c.nom}</td>
+                    <td>${Compte.getTypeLibelle(c.type)}</td>
+                    <td>${c.soldeNormal === 'debit' ? 'Débit' : 'Crédit'}</td>
+                    <td class="text-right">${Transaction.formaterMontant(c.solde)}</td>
+                    <td class="text-center">
+                        <button class="btn btn-secondary" onclick="Parametres.modifierCompte('${c.numero}')" title="Modifier">
+                            Modifier
+                        </button>
+                        ${c.actif
+                ? `<button class="btn btn-danger" onclick="Parametres.toggleCompte('${c.numero}', false)" title="Désactiver">Désactiver</button>`
+                : `<button class="btn btn-success" onclick="Parametres.toggleCompte('${c.numero}', true)" title="Activer">Activer</button>`
+            }
+                    </td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="Parametres.nouveauCompte()">
+                    + Nouveau compte
+                </button>
+                <input type="text" class="search-input" placeholder="Rechercher un compte..."
+                    onkeyup="Parametres.filtrerComptes(this.value)">
+            </div>
+
+            <div class="table-container">
+                <table id="table-comptes">
+                    <thead>
+                        <tr>
+                            <th>Numéro</th>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th>Solde normal</th>
+                            <th class="text-right">Solde</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    /**
+     * Filtre les comptes dans le tableau
+     */
+    filtrerComptes(terme) {
+        const rows = document.querySelectorAll('#table-comptes tbody tr');
+        const termeLower = terme.toLowerCase();
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(termeLower) ? '' : 'none';
+        });
+    },
+
+    /**
+     * Ouvre le modal pour un nouveau compte
+     */
+    nouveauCompte() {
+        App.ouvrirModal('Nouveau compte', `
+            <form id="form-compte" onsubmit="Parametres.sauvegarderCompte(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Numéro de compte *</label>
+                        <input type="text" id="compte-numero" required pattern="[0-9]{4}" title="4 chiffres">
+                    </div>
+                    <div class="form-group">
+                        <label>Type *</label>
+                        <select id="compte-type" required onchange="Parametres.ajusterSoldeNormal()">
+                            <option value="">Sélectionner</option>
+                            <option value="actif">Actif</option>
+                            <option value="passif">Passif</option>
+                            <option value="capitaux">Capitaux propres</option>
+                            <option value="revenus">Revenus</option>
+                            <option value="depenses">Dépenses</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nom du compte *</label>
+                    <input type="text" id="compte-nom" required>
+                </div>
+                <div class="form-group">
+                    <label>Solde normal *</label>
+                    <select id="compte-solde-normal" required>
+                        <option value="debit">Débit</option>
+                        <option value="credit">Crédit</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Ajuste le solde normal selon le type sélectionné
+     */
+    ajusterSoldeNormal() {
+        const type = document.getElementById('compte-type').value;
+        const soldeNormal = Compte.getSoldeNormalParDefaut(type);
+        document.getElementById('compte-solde-normal').value = soldeNormal;
+    },
+
+    /**
+     * Sauvegarde un nouveau compte
+     */
+    sauvegarderCompte(event) {
+        event.preventDefault();
+
+        try {
+            Compte.creer({
+                numero: document.getElementById('compte-numero').value,
+                nom: document.getElementById('compte-nom').value,
+                type: document.getElementById('compte-type').value,
+                soldeNormal: document.getElementById('compte-solde-normal').value
+            });
+
+            App.fermerModal();
+            App.notification('Compte créé avec succès', 'success');
+            document.getElementById('tab-plan-comptable').innerHTML = this.renderPlanComptable();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Ouvre le modal pour modifier un compte
+     */
+    modifierCompte(numero) {
+        const compte = Compte.getByNumero(numero);
+        if (!compte) return;
+
+        App.ouvrirModal('Modifier le compte', `
+            <form id="form-compte-edit" onsubmit="Parametres.sauvegarderModifCompte(event, '${numero}')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Numéro de compte *</label>
+                        <input type="text" id="compte-numero" value="${compte.numero}" required pattern="[0-9]{4}">
+                    </div>
+                    <div class="form-group">
+                        <label>Type *</label>
+                        <select id="compte-type" required>
+                            <option value="actif" ${compte.type === 'actif' ? 'selected' : ''}>Actif</option>
+                            <option value="passif" ${compte.type === 'passif' ? 'selected' : ''}>Passif</option>
+                            <option value="capitaux" ${compte.type === 'capitaux' ? 'selected' : ''}>Capitaux propres</option>
+                            <option value="revenus" ${compte.type === 'revenus' ? 'selected' : ''}>Revenus</option>
+                            <option value="depenses" ${compte.type === 'depenses' ? 'selected' : ''}>Dépenses</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nom du compte *</label>
+                    <input type="text" id="compte-nom" value="${compte.nom}" required>
+                </div>
+                <div class="form-group">
+                    <label>Solde normal *</label>
+                    <select id="compte-solde-normal" required>
+                        <option value="debit" ${compte.soldeNormal === 'debit' ? 'selected' : ''}>Débit</option>
+                        <option value="credit" ${compte.soldeNormal === 'credit' ? 'selected' : ''}>Crédit</option>
+                    </select>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Sauvegarde les modifications d'un compte
+     */
+    sauvegarderModifCompte(event, numeroOriginal) {
+        event.preventDefault();
+
+        try {
+            Compte.modifier(numeroOriginal, {
+                numero: document.getElementById('compte-numero').value,
+                nom: document.getElementById('compte-nom').value,
+                type: document.getElementById('compte-type').value,
+                soldeNormal: document.getElementById('compte-solde-normal').value
+            });
+
+            App.fermerModal();
+            App.notification('Compte modifié avec succès', 'success');
+            document.getElementById('tab-plan-comptable').innerHTML = this.renderPlanComptable();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Active ou désactive un compte
+     */
+    toggleCompte(numero, activer) {
+        try {
+            if (activer) {
+                Compte.activer(numero);
+                App.notification('Compte activé', 'success');
+            } else {
+                Compte.desactiver(numero);
+                App.notification('Compte désactivé', 'success');
+            }
+            document.getElementById('tab-plan-comptable').innerHTML = this.renderPlanComptable();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Render configuration des taxes
+     */
+    renderTaxes() {
+        const taxes = Storage.get('taxes');
+
+        return `
+            <div class="rapport-container">
+                <h3>Configuration des taxes</h3>
+                <form id="form-taxes" onsubmit="Parametres.sauvegarderTaxes(event)">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="taxes-appliquer" ${taxes.appliquerTaxes ? 'checked' : ''}>
+                            Appliquer les taxes automatiquement
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>TPS (Taxe sur les produits et services) %</label>
+                            <input type="number" id="taxes-tps" value="${taxes.tps}" step="0.001" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>TVQ (Taxe de vente du Québec) %</label>
+                            <input type="number" id="taxes-tvq" value="${taxes.tvq}" step="0.001" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <strong>Taux actuels au Québec:</strong><br>
+                        TPS: 5% (fédéral)<br>
+                        TVQ: 9.975% (provincial)
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </form>
+            </div>
+        `;
+    },
+
+    /**
+     * Sauvegarde la configuration des taxes
+     */
+    sauvegarderTaxes(event) {
+        event.preventDefault();
+
+        const taxes = {
+            appliquerTaxes: document.getElementById('taxes-appliquer').checked,
+            tps: parseFloat(document.getElementById('taxes-tps').value) || 0,
+            tvq: parseFloat(document.getElementById('taxes-tvq').value) || 0
+        };
+
+        Storage.set('taxes', taxes);
+        App.notification('Configuration des taxes enregistrée', 'success');
+    },
+
+    /**
+     * Render configuration de l'exercice
+     */
+    renderExercice() {
+        const exercice = Storage.get('exercice');
+
+        return `
+            <div class="rapport-container">
+                <h3>Exercice financier</h3>
+                <form id="form-exercice" onsubmit="Parametres.sauvegarderExercice(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date de début</label>
+                            <input type="date" id="exercice-debut" value="${exercice.debut}">
+                        </div>
+                        <div class="form-group">
+                            <label>Date de fin</label>
+                            <input type="date" id="exercice-fin" value="${exercice.fin}">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <strong>Attention:</strong> La modification des dates d'exercice peut affecter les rapports financiers.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </form>
+            </div>
+        `;
+    },
+
+    /**
+     * Sauvegarde la configuration de l'exercice
+     */
+    sauvegarderExercice(event) {
+        event.preventDefault();
+
+        const exercice = {
+            debut: document.getElementById('exercice-debut').value,
+            fin: document.getElementById('exercice-fin').value,
+            actif: true
+        };
+
+        Storage.set('exercice', exercice);
+        App.notification('Exercice financier enregistré', 'success');
+    },
+
+    // ========== GESTION DES PROJETS ==========
+
+    /**
+     * Render la liste des projets
+     */
+    renderProjets() {
+        const projets = Projet.getAll();
+
+        let tableRows = '';
+        projets.forEach(p => {
+            const client = p.clientId ? Client.getById(p.clientId) : null;
+            tableRows += `
+                <tr>
+                    <td>${p.code || '-'}</td>
+                    <td><strong>${p.nom}</strong>${p.description ? '<br><small class="text-light">' + p.description + '</small>' : ''}</td>
+                    <td>${client ? client.nom : '-'}</td>
+                    <td><span class="badge ${Projet.getStatutClasse(p.statut)}">${Projet.getStatutLibelle(p.statut)}</span></td>
+                    <td>${p.dateDebut || '-'}</td>
+                    <td>${p.dateFin || '-'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-secondary" onclick="Parametres.modifierProjet('${p.id}')">Modifier</button>
+                        <button class="btn btn-danger" onclick="Parametres.supprimerProjet('${p.id}')">Suppr</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="Parametres.nouveauProjet()">+ Nouveau projet</button>
+                <input type="text" class="search-input" placeholder="Rechercher un projet..."
+                    onkeyup="Parametres.filtrerProjets(this.value)">
+            </div>
+
+            <div class="table-container">
+                <table id="table-projets">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Nom</th>
+                            <th>Client</th>
+                            <th>Statut</th>
+                            <th>Début</th>
+                            <th>Fin</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows || '<tr><td colspan="7" class="text-center">Aucun projet</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    /**
+     * Filtre les projets dans le tableau
+     */
+    filtrerProjets(terme) {
+        const rows = document.querySelectorAll('#table-projets tbody tr');
+        const termeLower = terme.toLowerCase();
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(termeLower) ? '' : 'none';
+        });
+    },
+
+    /**
+     * Ouvre le formulaire nouveau projet
+     */
+    nouveauProjet() {
+        App.ouvrirModal('Nouveau projet', `
+            <form id="form-projet" onsubmit="Parametres.sauvegarderProjet(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Code du projet</label>
+                        <input type="text" id="projet-code" placeholder="Ex: PRJ-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Nom du projet *</label>
+                        <input type="text" id="projet-nom" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="projet-description" rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client</label>
+                        <select id="projet-client">
+                            <option value="">Aucun client</option>
+                            ${Client.genererOptions()}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select id="projet-statut">
+                            <option value="actif" selected>Actif</option>
+                            <option value="termine">Terminé</option>
+                            <option value="annule">Annulé</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date de début</label>
+                        <input type="date" id="projet-date-debut">
+                    </div>
+                    <div class="form-group">
+                        <label>Date de fin</label>
+                        <input type="date" id="projet-date-fin">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le projet</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Sauvegarde un nouveau projet
+     */
+    sauvegarderProjet(event) {
+        event.preventDefault();
+
+        try {
+            Projet.creer({
+                code: document.getElementById('projet-code').value.trim(),
+                nom: document.getElementById('projet-nom').value.trim(),
+                description: document.getElementById('projet-description').value.trim(),
+                clientId: document.getElementById('projet-client').value || null,
+                statut: document.getElementById('projet-statut').value,
+                dateDebut: document.getElementById('projet-date-debut').value,
+                dateFin: document.getElementById('projet-date-fin').value
+            });
+
+            App.fermerModal();
+            App.notification('Projet créé avec succès', 'success');
+            document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Ouvre le formulaire de modification d'un projet
+     */
+    modifierProjet(id) {
+        const p = Projet.getById(id);
+        if (!p) return;
+
+        App.ouvrirModal('Modifier le projet', `
+            <form id="form-projet-edit" onsubmit="Parametres.sauvegarderModifProjet(event, '${id}')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Code du projet</label>
+                        <input type="text" id="projet-code" value="${p.code || ''}" placeholder="Ex: PRJ-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Nom du projet *</label>
+                        <input type="text" id="projet-nom" value="${p.nom}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="projet-description" rows="2">${p.description || ''}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Client</label>
+                        <select id="projet-client">
+                            <option value="">Aucun client</option>
+                            ${Client.genererOptions(p.clientId)}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select id="projet-statut">
+                            <option value="actif" ${p.statut === 'actif' ? 'selected' : ''}>Actif</option>
+                            <option value="termine" ${p.statut === 'termine' ? 'selected' : ''}>Terminé</option>
+                            <option value="annule" ${p.statut === 'annule' ? 'selected' : ''}>Annulé</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date de début</label>
+                        <input type="date" id="projet-date-debut" value="${p.dateDebut || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>Date de fin</label>
+                        <input type="date" id="projet-date-fin" value="${p.dateFin || ''}">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Sauvegarde les modifications d'un projet
+     */
+    sauvegarderModifProjet(event, id) {
+        event.preventDefault();
+
+        try {
+            Projet.modifier(id, {
+                code: document.getElementById('projet-code').value.trim(),
+                nom: document.getElementById('projet-nom').value.trim(),
+                description: document.getElementById('projet-description').value.trim(),
+                clientId: document.getElementById('projet-client').value || null,
+                statut: document.getElementById('projet-statut').value,
+                dateDebut: document.getElementById('projet-date-debut').value,
+                dateFin: document.getElementById('projet-date-fin').value
+            });
+
+            App.fermerModal();
+            App.notification('Projet modifié avec succès', 'success');
+            document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Supprime un projet
+     */
+    supprimerProjet(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet?')) return;
+
+        try {
+            Projet.supprimer(id);
+            App.notification('Projet supprimé', 'success');
+            document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    }
+};

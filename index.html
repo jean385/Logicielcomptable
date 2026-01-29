@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Comptable - Système de Comptabilité</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Écran de sélection de dossier -->
+    <div id="ecran-dossiers" class="ecran-dossiers">
+        <div class="dossiers-header">
+            <h1>Simple Comptable</h1>
+            <p>Système de comptabilité</p>
+        </div>
+        <div class="dossiers-actions">
+            <button class="btn btn-primary" onclick="App.afficherCreationDossier()">+ Nouveau dossier</button>
+        </div>
+        <div id="dossiers-liste" class="dossiers-container">
+            <!-- Liste des dossiers générée dynamiquement -->
+        </div>
+    </div>
+
+    <!-- Application principale (hidden par défaut) -->
+    <div id="app-principal" style="display: none;">
+        <!-- Barre de menu -->
+        <nav class="menu-bar">
+            <div class="menu-item">
+                <span class="menu-title">Fichier</span>
+                <div class="menu-dropdown">
+                    <button onclick="App.afficherCreationDossier()">Nouveau dossier</button>
+                    <button onclick="App.changerDossier()">Changer de dossier</button>
+                    <hr>
+                    <button onclick="App.exporter()">Exporter (JSON)</button>
+                    <button onclick="App.importer()">Importer</button>
+                    <hr>
+                    <button onclick="App.confirmerSuppressionDossier()">Supprimer ce dossier</button>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">Rapports</span>
+                <div class="menu-dropdown">
+                    <button onclick="Rapports.afficherBilan()">Bilan</button>
+                    <button onclick="Rapports.afficherEtatResultats()">État des résultats</button>
+                    <button onclick="Rapports.afficherBalance()">Balance de vérification</button>
+                    <button onclick="Rapports.afficherGrandLivre()">Grand livre</button>
+                    <hr>
+                    <button onclick="Rapports.afficherRentabiliteProjet()">Rentabilité par projet</button>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">Outils</span>
+                <div class="menu-dropdown">
+                    <button onclick="App.calculatrice()">Calculatrice</button>
+                    <button onclick="App.fermetureExercice()">Fermeture d'exercice</button>
+                </div>
+            </div>
+            <div class="menu-item">
+                <span class="menu-title">Aide</span>
+                <div class="menu-dropdown">
+                    <button onclick="App.aPropos()">À propos</button>
+                </div>
+            </div>
+            <div class="menu-spacer"></div>
+            <div class="menu-info">
+                <span id="entreprise-nom">Simple Comptable</span>
+            </div>
+        </nav>
+
+        <!-- Contenu principal -->
+        <main class="main-content">
+            <!-- Écran d'accueil avec les 6 modules -->
+            <div id="accueil" class="page active">
+                <h1>Tableau de Bord</h1>
+                <div class="modules-grid">
+                    <button class="module-btn" onclick="General.afficher()">
+                        <span class="module-icon">📊</span>
+                        <span class="module-name">Module Général</span>
+                        <span class="module-desc">Grand livre, journal, écritures</span>
+                    </button>
+                    <button class="module-btn" onclick="Achats.afficher()">
+                        <span class="module-icon">📥</span>
+                        <span class="module-name">Achats</span>
+                        <span class="module-desc">Factures fournisseurs</span>
+                    </button>
+                    <button class="module-btn" onclick="Ventes.afficher()">
+                        <span class="module-icon">📤</span>
+                        <span class="module-name">Ventes</span>
+                        <span class="module-desc">Factures clients</span>
+                    </button>
+                    <button class="module-btn" onclick="Parametres.afficher()">
+                        <span class="module-icon">⚙️</span>
+                        <span class="module-name">Paramètres</span>
+                        <span class="module-desc">Plan comptable, taxes, config</span>
+                    </button>
+                    <button class="module-btn" onclick="Paiements.afficher()">
+                        <span class="module-icon">💳</span>
+                        <span class="module-name">Paiements</span>
+                        <span class="module-desc">Paiements fournisseurs</span>
+                    </button>
+                    <button class="module-btn" onclick="Encaissements.afficher()">
+                        <span class="module-icon">💰</span>
+                        <span class="module-name">Encaissements</span>
+                        <span class="module-desc">Réception paiements clients</span>
+                    </button>
+                </div>
+
+                <!-- Résumé rapide -->
+                <div class="dashboard-summary">
+                    <div class="summary-card">
+                        <h3>Encaisse</h3>
+                        <p class="amount" id="dash-encaisse">0,00 $</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Comptes clients</h3>
+                        <p class="amount" id="dash-clients">0,00 $</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Comptes fournisseurs</h3>
+                        <p class="amount" id="dash-fournisseurs">0,00 $</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Revenus du mois</h3>
+                        <p class="amount" id="dash-revenus">0,00 $</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pages des modules (générées dynamiquement) -->
+            <div id="module-general" class="page"></div>
+            <div id="module-parametres" class="page"></div>
+            <div id="module-achats" class="page"></div>
+            <div id="module-paiements" class="page"></div>
+            <div id="module-encaissements" class="page"></div>
+            <div id="module-ventes" class="page"></div>
+            <div id="module-rapports" class="page"></div>
+        </main>
+    </div>
+
+    <!-- Modal générique (hors des deux conteneurs) -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-titre"></h2>
+                <button class="modal-close" onclick="App.fermerModal()">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Calculatrice (hors des deux conteneurs) -->
+    <div id="calculatrice" class="calculatrice hidden">
+        <div class="calc-header">
+            <span>Calculatrice</span>
+            <button onclick="App.fermerCalculatrice()">&times;</button>
+        </div>
+        <input type="text" id="calc-display" readonly>
+        <div class="calc-buttons">
+            <button onclick="App.calcBtn('7')">7</button>
+            <button onclick="App.calcBtn('8')">8</button>
+            <button onclick="App.calcBtn('9')">9</button>
+            <button onclick="App.calcBtn('/')">/</button>
+            <button onclick="App.calcBtn('4')">4</button>
+            <button onclick="App.calcBtn('5')">5</button>
+            <button onclick="App.calcBtn('6')">6</button>
+            <button onclick="App.calcBtn('*')">*</button>
+            <button onclick="App.calcBtn('1')">1</button>
+            <button onclick="App.calcBtn('2')">2</button>
+            <button onclick="App.calcBtn('3')">3</button>
+            <button onclick="App.calcBtn('-')">-</button>
+            <button onclick="App.calcBtn('0')">0</button>
+            <button onclick="App.calcBtn('.')">.</button>
+            <button onclick="App.calcEgal()">=</button>
+            <button onclick="App.calcBtn('+')">+</button>
+            <button onclick="App.calcClear()" class="calc-clear">C</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/models/compte.js"></script>
+    <script src="js/models/transaction.js"></script>
+    <script src="js/models/client.js"></script>
+    <script src="js/models/fournisseur.js"></script>
+    <script src="js/models/facture.js"></script>
+    <script src="js/models/projet.js"></script>
+    <script src="js/modules/parametres.js"></script>
+    <script src="js/modules/general.js"></script>
+    <script src="js/modules/ventes.js"></script>
+    <script src="js/modules/encaissements.js"></script>
+    <script src="js/modules/achats.js"></script>
+    <script src="js/modules/paiements.js"></script>
+    <script src="js/modules/rapports.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

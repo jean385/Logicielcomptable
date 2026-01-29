@@ -1,0 +1,342 @@
+{
+  "version": "1.0",
+  "description": "Plan comptable canadien standard",
+  "comptes": [
+    {
+      "numero": "1000",
+      "nom": "Encaisse",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Argent en caisse et comptes bancaires"
+    },
+    {
+      "numero": "1050",
+      "nom": "Petite caisse",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Fonds de petite caisse"
+    },
+    {
+      "numero": "1100",
+      "nom": "Comptes clients",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Montants dus par les clients"
+    },
+    {
+      "numero": "1150",
+      "nom": "TPS à recevoir",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Crédit de TPS (taxe sur intrants)"
+    },
+    {
+      "numero": "1160",
+      "nom": "TVQ à recevoir",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Crédit de TVQ (taxe sur intrants)"
+    },
+    {
+      "numero": "1200",
+      "nom": "Stock de marchandises",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Inventaire des marchandises"
+    },
+    {
+      "numero": "1300",
+      "nom": "Frais payés d'avance",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Charges payées à l'avance"
+    },
+    {
+      "numero": "1500",
+      "nom": "Équipement",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Équipement et outillage"
+    },
+    {
+      "numero": "1510",
+      "nom": "Amortissement cumulé - Équipement",
+      "type": "actif",
+      "soldeNormal": "credit",
+      "description": "Amortissement cumulé de l'équipement"
+    },
+    {
+      "numero": "1600",
+      "nom": "Véhicules",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Véhicules de l'entreprise"
+    },
+    {
+      "numero": "1610",
+      "nom": "Amortissement cumulé - Véhicules",
+      "type": "actif",
+      "soldeNormal": "credit",
+      "description": "Amortissement cumulé des véhicules"
+    },
+    {
+      "numero": "1700",
+      "nom": "Bâtiments",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Immeubles de l'entreprise"
+    },
+    {
+      "numero": "1710",
+      "nom": "Amortissement cumulé - Bâtiments",
+      "type": "actif",
+      "soldeNormal": "credit",
+      "description": "Amortissement cumulé des bâtiments"
+    },
+    {
+      "numero": "1800",
+      "nom": "Terrain",
+      "type": "actif",
+      "soldeNormal": "debit",
+      "description": "Terrains de l'entreprise"
+    },
+    {
+      "numero": "2100",
+      "nom": "Comptes fournisseurs",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Montants dus aux fournisseurs"
+    },
+    {
+      "numero": "2200",
+      "nom": "TPS à payer",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "TPS perçue sur les ventes"
+    },
+    {
+      "numero": "2210",
+      "nom": "TVQ à payer",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "TVQ perçue sur les ventes"
+    },
+    {
+      "numero": "2300",
+      "nom": "Salaires à payer",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Salaires dus aux employés"
+    },
+    {
+      "numero": "2400",
+      "nom": "Emprunt bancaire - Court terme",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Marge de crédit et emprunts court terme"
+    },
+    {
+      "numero": "2500",
+      "nom": "Portion courante dette long terme",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Portion de la dette à long terme échéant dans l'année"
+    },
+    {
+      "numero": "2600",
+      "nom": "Emprunt bancaire - Long terme",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Emprunts à long terme"
+    },
+    {
+      "numero": "2700",
+      "nom": "Hypothèque à payer",
+      "type": "passif",
+      "soldeNormal": "credit",
+      "description": "Dette hypothécaire"
+    },
+    {
+      "numero": "3100",
+      "nom": "Capital",
+      "type": "capitaux",
+      "soldeNormal": "credit",
+      "description": "Capital investi par les propriétaires"
+    },
+    {
+      "numero": "3200",
+      "nom": "Apports",
+      "type": "capitaux",
+      "soldeNormal": "credit",
+      "description": "Apports additionnels des propriétaires"
+    },
+    {
+      "numero": "3300",
+      "nom": "Retraits",
+      "type": "capitaux",
+      "soldeNormal": "debit",
+      "description": "Retraits effectués par les propriétaires"
+    },
+    {
+      "numero": "3400",
+      "nom": "Bénéfices non répartis",
+      "type": "capitaux",
+      "soldeNormal": "credit",
+      "description": "Bénéfices accumulés non distribués"
+    },
+    {
+      "numero": "4000",
+      "nom": "Ventes",
+      "type": "revenus",
+      "soldeNormal": "credit",
+      "description": "Ventes de marchandises"
+    },
+    {
+      "numero": "4050",
+      "nom": "Rendus et rabais sur ventes",
+      "type": "revenus",
+      "soldeNormal": "debit",
+      "description": "Retours et réductions accordées"
+    },
+    {
+      "numero": "4100",
+      "nom": "Revenus de services",
+      "type": "revenus",
+      "soldeNormal": "credit",
+      "description": "Revenus provenant de services rendus"
+    },
+    {
+      "numero": "4200",
+      "nom": "Revenus d'intérêts",
+      "type": "revenus",
+      "soldeNormal": "credit",
+      "description": "Intérêts gagnés"
+    },
+    {
+      "numero": "4300",
+      "nom": "Autres revenus",
+      "type": "revenus",
+      "soldeNormal": "credit",
+      "description": "Revenus divers"
+    },
+    {
+      "numero": "5000",
+      "nom": "Coût des marchandises vendues",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Coût d'achat des marchandises vendues"
+    },
+    {
+      "numero": "5100",
+      "nom": "Salaires",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Salaires des employés"
+    },
+    {
+      "numero": "5110",
+      "nom": "Avantages sociaux",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Contributions de l'employeur (RRQ, AE, RQAP, etc.)"
+    },
+    {
+      "numero": "5200",
+      "nom": "Loyer",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Location de locaux"
+    },
+    {
+      "numero": "5300",
+      "nom": "Électricité",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Frais d'électricité"
+    },
+    {
+      "numero": "5310",
+      "nom": "Chauffage",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Frais de chauffage"
+    },
+    {
+      "numero": "5400",
+      "nom": "Fournitures de bureau",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Papeterie et fournitures"
+    },
+    {
+      "numero": "5500",
+      "nom": "Amortissement",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Charge d'amortissement annuelle"
+    },
+    {
+      "numero": "5600",
+      "nom": "Assurances",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Primes d'assurance"
+    },
+    {
+      "numero": "5700",
+      "nom": "Publicité et marketing",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Frais de publicité et promotion"
+    },
+    {
+      "numero": "5800",
+      "nom": "Frais bancaires",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Frais de compte bancaire"
+    },
+    {
+      "numero": "5810",
+      "nom": "Intérêts sur emprunts",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Intérêts payés sur emprunts"
+    },
+    {
+      "numero": "5900",
+      "nom": "Télécommunications",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Téléphone, internet, etc."
+    },
+    {
+      "numero": "5910",
+      "nom": "Frais de déplacement",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Transport et kilométrage"
+    },
+    {
+      "numero": "5920",
+      "nom": "Frais de représentation",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Repas d'affaires et divertissement"
+    },
+    {
+      "numero": "5950",
+      "nom": "Honoraires professionnels",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Comptable, avocat, consultant"
+    },
+    {
+      "numero": "5990",
+      "nom": "Autres dépenses",
+      "type": "depenses",
+      "soldeNormal": "debit",
+      "description": "Dépenses diverses"
+    }
+  ]
+}

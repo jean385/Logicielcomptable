@@ -1,0 +1,750 @@
+/**
+ * Application principale - Point d'entrée
+ * Gère le flux multi-dossiers et la navigation
+ */
+
+const App = {
+    /**
+     * Initialisation de l'application
+     * Détecte le dernier dossier ou affiche l'écran de sélection
+     */
+    init() {
+        // Migration V1: détecter les anciennes données sans dossier
+        this.migrerDonneesV1();
+
+        const dernierDossierId = Storage.getDernierDossier();
+        const dossiers = Storage.getDossiers();
+
+        if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
+            this.ouvrirDossierExistant(dernierDossierId);
+        } else {
+            this.afficherEcranDossiers();
+        }
+    },
+
+    /**
+     * Migration V1: migre les anciennes données (sans système de dossiers)
+     * vers le nouveau format multi-dossiers
+     */
+    migrerDonneesV1() {
+        // Vérifier s'il y a des données V1 (clé 'comptabilite_initialized' sans dossiers)
+        const ancienneInit = localStorage.getItem('comptabilite_initialized');
+        const dossiersExistants = Storage.getDossiers();
+
+        if (ancienneInit && dossiersExistants.length === 0) {
+            console.log('Migration V1 détectée: migration des anciennes données...');
+
+            // Récupérer les anciennes données avec le préfixe simple
+            const ancienPrefix = 'comptabilite_';
+            const ancienneEntreprise = JSON.parse(localStorage.getItem(ancienPrefix + 'entreprise') || 'null');
+            const anciennesTaxes = JSON.parse(localStorage.getItem(ancienPrefix + 'taxes') || 'null');
+            const ancienExercice = JSON.parse(localStorage.getItem(ancienPrefix + 'exercice') || 'null');
+            const anciensComptes = JSON.parse(localStorage.getItem(ancienPrefix + 'comptes') || 'null');
+            const anciennesTransactions = JSON.parse(localStorage.getItem(ancienPrefix + 'transactions') || 'null');
+            const anciensClients = JSON.parse(localStorage.getItem(ancienPrefix + 'clients') || 'null');
+            const anciensFournisseurs = JSON.parse(localStorage.getItem(ancienPrefix + 'fournisseurs') || 'null');
+            const anciennesFactures = JSON.parse(localStorage.getItem(ancienPrefix + 'factures') || 'null');
+
+            // Créer un nouveau dossier pour les données migrées
+            const id = Storage.generateId();
+            const nomEntreprise = (ancienneEntreprise && (ancienneEntreprise.nomCommercial || ancienneEntreprise.nom)) || 'Dossier migré';
+
+            // Enrichir l'entreprise avec le nouveau schéma
+            const entrepriseMigree = ancienneEntreprise ? {
+                nomCommercial: ancienneEntreprise.nomCommercial || ancienneEntreprise.nom || 'Mon Entreprise',
+                raisonSociale: ancienneEntreprise.raisonSociale || '',
+                adresse: ancienneEntreprise.adresse || '',
+                ville: ancienneEntreprise.ville || '',
+                province: ancienneEntreprise.province || 'QC',
+                codePostal: ancienneEntreprise.codePostal || '',
+                pays: ancienneEntreprise.pays || 'Canada',
+                telephone: ancienneEntreprise.telephone || '',
+                telecopieur: ancienneEntreprise.telecopieur || '',
+                courriel: ancienneEntreprise.courriel || '',
+                siteWeb: ancienneEntreprise.siteWeb || '',
+                neq: ancienneEntreprise.neq || '',
+                tps: ancienneEntreprise.tps || '',
+                tvq: ancienneEntreprise.tvq || '',
+                dateCreationEntreprise: ancienneEntreprise.dateCreationEntreprise || ''
+            } : null;
+
+            // Enregistrer le dossier dans le registre
+            const dossiers = [{
+                id: id,
+                nom: nomEntreprise,
+                dateCreation: new Date().toISOString(),
+                dernierAcces: new Date().toISOString()
+            }];
+            Storage.saveDossiers(dossiers);
+
+            // Activer le dossier et copier les données
+            Storage.activerDossier(id);
+            Storage.initDefaultData();
+            Storage.set('initialized', true);
+
+            if (entrepriseMigree) Storage.set('entreprise', entrepriseMigree);
+            if (anciennesTaxes) Storage.set('taxes', anciennesTaxes);
+            if (ancienExercice) Storage.set('exercice', ancienExercice);
+            if (anciensComptes) Storage.set('comptes', anciensComptes);
+            if (anciennesTransactions) Storage.set('transactions', anciennesTransactions);
+            if (anciensClients) Storage.set('clients', anciensClients);
+            if (anciensFournisseurs) Storage.set('fournisseurs', anciensFournisseurs);
+            if (anciennesFactures) Storage.set('factures', anciennesFactures);
+
+            // Nettoyer les anciennes clés V1
+            const anciensKeys = [
+                'comptabilite_initialized',
+                'comptabilite_entreprise',
+                'comptabilite_taxes',
+                'comptabilite_exercice',
+                'comptabilite_comptes',
+                'comptabilite_transactions',
+                'comptabilite_clients',
+                'comptabilite_fournisseurs',
+                'comptabilite_factures'
+            ];
+            anciensKeys.forEach(k => localStorage.removeItem(k));
+
+            console.log('Migration V1 terminée. Dossier créé:', nomEntreprise);
+        }
+    },
+
+    // ========== GESTION DES DOSSIERS ==========
+
+    /**
+     * Affiche l'écran de sélection de dossiers
+     */
+    afficherEcranDossiers() {
+        document.getElementById('ecran-dossiers').style.display = '';
+        document.getElementById('app-principal').style.display = 'none';
+
+        const dossiers = Storage.getDossiers();
+        const container = document.getElementById('dossiers-liste');
+
+        if (dossiers.length === 0) {
+            container.innerHTML = `
+                <div class="dossiers-vide">
+                    <p>Aucun dossier</p>
+                    <p>Cliquez sur "Nouveau dossier" pour commencer.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Trier par dernier accès (plus récent en premier)
+        const dossiersTries = [...dossiers].sort((a, b) =>
+            new Date(b.dernierAcces) - new Date(a.dernierAcces)
+        );
+
+        container.innerHTML = dossiersTries.map(d => {
+            const dateCreation = new Date(d.dateCreation).toLocaleDateString('fr-CA');
+            const dernierAcces = new Date(d.dernierAcces).toLocaleDateString('fr-CA');
+            return `
+                <div class="dossier-card" onclick="App.ouvrirDossierExistant('${d.id}')">
+                    <div class="dossier-nom">${this.escapeHtml(d.nom)}</div>
+                    <div class="dossier-date">Créé le ${dateCreation}</div>
+                    <div class="dossier-acces">Dernier accès: ${dernierAcces}</div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    /**
+     * Ouvre un dossier existant et affiche l'application
+     */
+    ouvrirDossierExistant(id) {
+        Storage.activerDossier(id);
+        Storage.init();
+
+        document.getElementById('ecran-dossiers').style.display = 'none';
+        document.getElementById('app-principal').style.display = '';
+
+        // Mettre à jour le nom de l'entreprise dans la barre
+        const entreprise = Storage.get('entreprise');
+        if (entreprise) {
+            const nom = entreprise.nomCommercial || entreprise.nom || 'Simple Comptable';
+            document.getElementById('entreprise-nom').textContent = nom;
+        }
+
+        this.mettreAJourDashboard();
+        this.afficherPage('accueil');
+
+        console.log('Dossier ouvert:', id);
+    },
+
+    /**
+     * Change de dossier (retourne à l'écran de sélection)
+     */
+    changerDossier() {
+        this.afficherEcranDossiers();
+    },
+
+    /**
+     * Affiche le formulaire de création de dossier
+     */
+    afficherCreationDossier() {
+        // S'assurer que le modal est visible (fonctionne depuis l'écran dossiers ou l'app)
+        const contenu = `
+            <form id="form-nouveau-dossier" onsubmit="App.creerNouveauDossier(event)">
+                <div class="form-section">
+                    <h4>Identification</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nom commercial *</label>
+                            <input type="text" id="nd-nomCommercial" required placeholder="Nom affiché de l'entreprise">
+                        </div>
+                        <div class="form-group">
+                            <label>Raison sociale</label>
+                            <input type="text" id="nd-raisonSociale" placeholder="Dénomination légale">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>NEQ (Numéro d'entreprise du Québec)</label>
+                            <input type="text" id="nd-neq" placeholder="1234567890">
+                        </div>
+                        <div class="form-group">
+                            <label>Date de création de l'entreprise</label>
+                            <input type="date" id="nd-dateCreation">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Numéros de taxes</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Numéro de TPS</label>
+                            <input type="text" id="nd-tps" placeholder="123456789 RT 0001">
+                        </div>
+                        <div class="form-group">
+                            <label>Numéro de TVQ</label>
+                            <input type="text" id="nd-tvq" placeholder="1234567890 TQ 0001">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Adresse</h4>
+                    <div class="form-group">
+                        <label>Adresse</label>
+                        <input type="text" id="nd-adresse" placeholder="123 rue Principale">
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Ville</label>
+                            <input type="text" id="nd-ville">
+                        </div>
+                        <div class="form-group">
+                            <label>Province</label>
+                            <select id="nd-province">
+                                <option value="QC" selected>Québec</option>
+                                <option value="ON">Ontario</option>
+                                <option value="BC">Colombie-Britannique</option>
+                                <option value="AB">Alberta</option>
+                                <option value="SK">Saskatchewan</option>
+                                <option value="MB">Manitoba</option>
+                                <option value="NB">Nouveau-Brunswick</option>
+                                <option value="NS">Nouvelle-Écosse</option>
+                                <option value="PE">Île-du-Prince-Édouard</option>
+                                <option value="NL">Terre-Neuve-et-Labrador</option>
+                                <option value="YT">Yukon</option>
+                                <option value="NT">Territoires du Nord-Ouest</option>
+                                <option value="NU">Nunavut</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Code postal</label>
+                            <input type="text" id="nd-codePostal" placeholder="H1A 1A1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pays</label>
+                        <input type="text" id="nd-pays" value="Canada">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Contact</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Téléphone</label>
+                            <input type="tel" id="nd-telephone" placeholder="(514) 555-1234">
+                        </div>
+                        <div class="form-group">
+                            <label>Télécopieur</label>
+                            <input type="tel" id="nd-telecopieur" placeholder="(514) 555-5678">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Courriel</label>
+                            <input type="email" id="nd-courriel" placeholder="info@entreprise.ca">
+                        </div>
+                        <div class="form-group">
+                            <label>Site Web</label>
+                            <input type="text" id="nd-siteWeb" placeholder="www.entreprise.ca">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Exercice financier</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Début de l'exercice</label>
+                            <input type="date" id="nd-exerciceDebut" value="${new Date().getFullYear()}-01-01">
+                        </div>
+                        <div class="form-group">
+                            <label>Fin de l'exercice</label>
+                            <input type="date" id="nd-exerciceFin" value="${new Date().getFullYear()}-12-31">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer le dossier</button>
+                </div>
+            </form>
+        `;
+
+        this.ouvrirModal('Nouveau dossier', contenu);
+    },
+
+    /**
+     * Crée un nouveau dossier à partir du formulaire
+     */
+    creerNouveauDossier(event) {
+        event.preventDefault();
+
+        const infoEntreprise = {
+            nomCommercial: document.getElementById('nd-nomCommercial').value.trim(),
+            raisonSociale: document.getElementById('nd-raisonSociale').value.trim(),
+            neq: document.getElementById('nd-neq').value.trim(),
+            dateCreationEntreprise: document.getElementById('nd-dateCreation').value,
+            tps: document.getElementById('nd-tps').value.trim(),
+            tvq: document.getElementById('nd-tvq').value.trim(),
+            adresse: document.getElementById('nd-adresse').value.trim(),
+            ville: document.getElementById('nd-ville').value.trim(),
+            province: document.getElementById('nd-province').value,
+            codePostal: document.getElementById('nd-codePostal').value.trim(),
+            pays: document.getElementById('nd-pays').value.trim(),
+            telephone: document.getElementById('nd-telephone').value.trim(),
+            telecopieur: document.getElementById('nd-telecopieur').value.trim(),
+            courriel: document.getElementById('nd-courriel').value.trim(),
+            siteWeb: document.getElementById('nd-siteWeb').value.trim()
+        };
+
+        const id = Storage.creerDossier(infoEntreprise);
+
+        // Mettre à jour l'exercice si spécifié
+        const exerciceDebut = document.getElementById('nd-exerciceDebut').value;
+        const exerciceFin = document.getElementById('nd-exerciceFin').value;
+        if (exerciceDebut && exerciceFin) {
+            Storage.set('exercice', {
+                debut: exerciceDebut,
+                fin: exerciceFin,
+                actif: true
+            });
+        }
+
+        this.fermerModal();
+        this.ouvrirDossierExistant(id);
+        this.notification('Dossier créé avec succès', 'success');
+    },
+
+    /**
+     * Confirmation de suppression du dossier actif
+     */
+    confirmerSuppressionDossier() {
+        if (!Storage.activeDossierId) return;
+
+        const dossiers = Storage.getDossiers();
+        const dossier = dossiers.find(d => d.id === Storage.activeDossierId);
+        const nomDossier = dossier ? dossier.nom : 'ce dossier';
+
+        this.ouvrirModal('Supprimer le dossier', `
+            <div class="alert alert-danger">
+                <strong>Attention!</strong> Vous êtes sur le point de supprimer le dossier
+                "<strong>${this.escapeHtml(nomDossier)}</strong>" et toutes ses données comptables.
+                <br><br>
+                Cette action est <strong>irréversible</strong>.
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                <button class="btn btn-danger" onclick="App.executerSuppressionDossier()">Supprimer définitivement</button>
+            </div>
+        `);
+    },
+
+    /**
+     * Exécute la suppression du dossier actif
+     */
+    executerSuppressionDossier() {
+        const id = Storage.activeDossierId;
+        if (!id) return;
+
+        Storage.supprimerDossier(id);
+        this.fermerModal();
+        this.afficherEcranDossiers();
+        this.notification('Dossier supprimé', 'success');
+    },
+
+    // ========== NAVIGATION ET UI ==========
+
+    /**
+     * Met à jour les stats du dashboard
+     */
+    mettreAJourDashboard() {
+        const compteEncaisse = Compte.getByNumero('1000');
+        const compteClients = Compte.getByNumero('1100');
+        const compteFournisseurs = Compte.getByNumero('2100');
+
+        document.getElementById('dash-encaisse').textContent =
+            Transaction.formaterMontant(compteEncaisse ? compteEncaisse.solde : 0);
+        document.getElementById('dash-clients').textContent =
+            Transaction.formaterMontant(compteClients ? compteClients.solde : 0);
+        document.getElementById('dash-fournisseurs').textContent =
+            Transaction.formaterMontant(compteFournisseurs ? compteFournisseurs.solde : 0);
+
+        // Revenus du mois
+        const compteVentes = Compte.getByNumero('4000');
+        document.getElementById('dash-revenus').textContent =
+            Transaction.formaterMontant(compteVentes ? compteVentes.solde : 0);
+    },
+
+    /**
+     * Affiche une page spécifique
+     */
+    afficherPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+    },
+
+    /**
+     * Retourne à l'accueil
+     */
+    retourAccueil() {
+        this.afficherPage('accueil');
+        this.mettreAJourDashboard();
+    },
+
+    /**
+     * Ouvre un modal
+     */
+    ouvrirModal(titre, contenu) {
+        document.getElementById('modal-titre').textContent = titre;
+        document.getElementById('modal-body').innerHTML = contenu;
+        document.getElementById('modal').classList.add('active');
+    },
+
+    /**
+     * Ferme le modal
+     */
+    fermerModal() {
+        document.getElementById('modal').classList.remove('active');
+    },
+
+    /**
+     * Affiche une notification
+     */
+    notification(message, type = 'info') {
+        const notif = document.createElement('div');
+        notif.className = `alert alert-${type}`;
+        notif.style.cssText = `
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 300;
+            min-width: 300px;
+            max-width: 500px;
+            animation: slideIn 0.3s ease;
+        `;
+        notif.textContent = message;
+
+        if (!document.getElementById('notif-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notif-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(notif);
+
+        setTimeout(() => {
+            notif.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        }, 3000);
+    },
+
+    // ========== FICHIER ==========
+
+    /**
+     * Exporter les données du dossier actif
+     */
+    exporter() {
+        if (!Storage.activeDossierId) return;
+
+        const donnees = Storage.exporterDonnees();
+        const blob = new Blob([donnees], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const entreprise = Storage.get('entreprise');
+        const nom = (entreprise.nomCommercial || entreprise.nom || 'comptabilite');
+        const nomFichier = nom.replace(/[^a-z0-9àâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/gi, '_');
+        const date = new Date().toISOString().split('T')[0];
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${nomFichier}_${date}.json`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+        this.notification('Données exportées avec succès', 'success');
+    },
+
+    /**
+     * Importer des données dans le dossier actif
+     */
+    importer() {
+        if (!Storage.activeDossierId) return;
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (Storage.importerDonnees(event.target.result)) {
+                    this.notification('Données importées avec succès', 'success');
+                    // Mettre à jour le nom du dossier dans le registre
+                    const entreprise = Storage.get('entreprise');
+                    if (entreprise) {
+                        const nom = entreprise.nomCommercial || entreprise.nom;
+                        if (nom) {
+                            Storage.renommerDossier(Storage.activeDossierId, nom);
+                        }
+                    }
+                    this.ouvrirDossierExistant(Storage.activeDossierId);
+                } else {
+                    this.notification('Erreur lors de l\'importation', 'danger');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        input.click();
+    },
+
+    // ========== OUTILS ==========
+
+    /**
+     * Affiche la calculatrice
+     */
+    calculatrice() {
+        document.getElementById('calculatrice').classList.remove('hidden');
+        document.getElementById('calc-display').value = '';
+    },
+
+    /**
+     * Ferme la calculatrice
+     */
+    fermerCalculatrice() {
+        document.getElementById('calculatrice').classList.add('hidden');
+    },
+
+    /**
+     * Bouton de la calculatrice
+     */
+    calcBtn(val) {
+        document.getElementById('calc-display').value += val;
+    },
+
+    /**
+     * Calculer le résultat
+     */
+    calcEgal() {
+        try {
+            const result = eval(document.getElementById('calc-display').value);
+            document.getElementById('calc-display').value = result;
+        } catch (e) {
+            document.getElementById('calc-display').value = 'Erreur';
+        }
+    },
+
+    /**
+     * Effacer la calculatrice
+     */
+    calcClear() {
+        document.getElementById('calc-display').value = '';
+    },
+
+    /**
+     * Fermeture d'exercice
+     */
+    fermetureExercice() {
+        this.ouvrirModal('Fermeture d\'exercice', `
+            <div class="alert alert-warning">
+                <strong>Attention:</strong> La fermeture d'exercice va:
+                <ul>
+                    <li>Transférer le bénéfice net aux bénéfices non répartis</li>
+                    <li>Remettre à zéro les comptes de revenus et dépenses</li>
+                </ul>
+                Cette opération est irréversible.
+            </div>
+
+            <form onsubmit="App.executerFermeture(event)">
+                <div class="form-group">
+                    <label>Date de fermeture</label>
+                    <input type="date" id="fermeture-date" value="${new Date().toISOString().split('T')[0]}" required>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Confirmer la fermeture</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Exécute la fermeture d'exercice
+     */
+    executerFermeture(event) {
+        event.preventDefault();
+
+        const date = document.getElementById('fermeture-date').value;
+        const comptes = Compte.getActifs();
+
+        const revenus = comptes.filter(c => c.type === 'revenus');
+        const depenses = comptes.filter(c => c.type === 'depenses');
+
+        const totalRevenus = revenus.reduce((s, c) => s + c.solde, 0);
+        const totalDepenses = depenses.reduce((s, c) => s + c.solde, 0);
+        const beneficeNet = totalRevenus - totalDepenses;
+
+        const lignes = [];
+
+        revenus.forEach(c => {
+            if (c.solde !== 0) {
+                lignes.push({
+                    compte: c.numero,
+                    debit: c.solde,
+                    credit: 0
+                });
+            }
+        });
+
+        depenses.forEach(c => {
+            if (c.solde !== 0) {
+                lignes.push({
+                    compte: c.numero,
+                    debit: 0,
+                    credit: c.solde
+                });
+            }
+        });
+
+        if (beneficeNet !== 0) {
+            lignes.push({
+                compte: '3400',
+                debit: beneficeNet < 0 ? Math.abs(beneficeNet) : 0,
+                credit: beneficeNet > 0 ? beneficeNet : 0
+            });
+        }
+
+        if (lignes.length === 0) {
+            this.notification('Aucune opération à effectuer', 'info');
+            this.fermerModal();
+            return;
+        }
+
+        try {
+            Transaction.creer({
+                date: date,
+                description: 'Fermeture d\'exercice',
+                reference: 'FERM-' + date,
+                lignes: lignes,
+                module: 'general'
+            });
+
+            this.notification('Fermeture d\'exercice effectuée avec succès', 'success');
+            this.fermerModal();
+            this.mettreAJourDashboard();
+        } catch (e) {
+            this.notification('Erreur: ' + e.message, 'danger');
+        }
+    },
+
+    /**
+     * À propos
+     */
+    aPropos() {
+        this.ouvrirModal('À propos', `
+            <div style="text-align: center;">
+                <h2 style="color: var(--primary-color);">Simple Comptable</h2>
+                <p>Version 2.0</p>
+                <p>Système de comptabilité web</p>
+                <hr style="margin: 20px 0;">
+                <p>Inspiré de Simple Comptable (Sage)</p>
+                <p>Plan comptable canadien</p>
+                <hr style="margin: 20px 0;">
+                <p><strong>Fonctionnalités:</strong></p>
+                <ul style="text-align: left; max-width: 300px; margin: 0 auto;">
+                    <li>Gestion multi-dossiers</li>
+                    <li>Gestion du plan comptable</li>
+                    <li>Écritures comptables</li>
+                    <li>Gestion des clients et fournisseurs</li>
+                    <li>Facturation (ventes et achats)</li>
+                    <li>Encaissements et paiements</li>
+                    <li>Rapports financiers</li>
+                </ul>
+            </div>
+        `);
+    },
+
+    // ========== UTILITAIRES ==========
+
+    /**
+     * Échappe le HTML pour éviter les injections XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+};
+
+// Initialiser l'application au chargement
+document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+});
+
+// Fermer le modal en cliquant à l'extérieur
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('modal');
+    if (e.target === modal) {
+        App.fermerModal();
+    }
+});
+
+// Raccourcis clavier
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        App.fermerModal();
+        App.fermerCalculatrice();
+    }
+});

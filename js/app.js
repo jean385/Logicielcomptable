@@ -162,7 +162,7 @@ const App = {
         // Mettre à jour le nom de l'entreprise dans la barre
         const entreprise = Storage.get('entreprise');
         if (entreprise) {
-            const nom = entreprise.nomCommercial || entreprise.nom || 'Simple Comptable';
+            const nom = entreprise.nomCommercial || entreprise.nom || 'Votre Entreprise';
             document.getElementById('entreprise-nom').textContent = nom;
         }
 
@@ -695,11 +695,11 @@ const App = {
     aPropos() {
         this.ouvrirModal('À propos', `
             <div style="text-align: center;">
-                <h2 style="color: var(--primary-color);">Simple Comptable</h2>
+                <h2 style="color: var(--primary-color);">Votre Entreprise</h2>
                 <p>Version 2.0</p>
                 <p>Système de comptabilité web</p>
                 <hr style="margin: 20px 0;">
-                <p>Inspiré de Simple Comptable (Sage)</p>
+                <p>Logiciel de comptabilité</p>
                 <p>Plan comptable canadien</p>
                 <hr style="margin: 20px 0;">
                 <p><strong>Fonctionnalités:</strong></p>

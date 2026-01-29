@@ -7,6 +7,87 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- Écran de connexion -->
+    <div id="ecran-login" class="ecran-login" style="display: none;">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Votre Entreprise</h1>
+                <p>Système de comptabilité</p>
+            </div>
+
+            <!-- Formulaire de connexion -->
+            <div id="form-connexion">
+                <h2>Connexion</h2>
+                <form onsubmit="App.soumettreConnexion(event)">
+                    <div class="form-group">
+                        <label for="login-email">Courriel</label>
+                        <input type="email" id="login-email" required placeholder="exemple@courriel.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-mdp">Mot de passe</label>
+                        <input type="password" id="login-mdp" required placeholder="Mot de passe" minlength="6">
+                    </div>
+                    <div id="login-erreur" class="alert alert-danger" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary btn-login" id="btn-connexion">Se connecter</button>
+                </form>
+                <p class="login-toggle">Pas de compte? <a href="#" onclick="App.afficherPrix(); return false;">Créer un compte</a></p>
+            </div>
+
+            <!-- Formulaire d'inscription -->
+            <div id="form-inscription" style="display: none;">
+                <h2>Créer un compte</h2>
+                <form onsubmit="App.soumettreInscription(event)">
+                    <div class="form-group">
+                        <label for="inscription-email">Courriel</label>
+                        <input type="email" id="inscription-email" required placeholder="exemple@courriel.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="inscription-mdp">Mot de passe</label>
+                        <input type="password" id="inscription-mdp" required placeholder="Minimum 6 caractères" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="inscription-mdp-confirm">Confirmer le mot de passe</label>
+                        <input type="password" id="inscription-mdp-confirm" required placeholder="Confirmer le mot de passe" minlength="6">
+                    </div>
+                    <div id="inscription-erreur" class="alert alert-danger" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary btn-login" id="btn-inscription">Créer le compte</button>
+                </form>
+                <p class="login-toggle">Déjà un compte? <a href="#" onclick="App.basculerInscription(false); return false;">Se connecter</a></p>
+            </div>
+
+            <!-- Écran de prix -->
+            <div id="ecran-prix" style="display: none;">
+                <div class="prix-contenu">
+                    <h2>Abonnement</h2>
+                    <div class="prix-card">
+                        <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
+                        <ul class="prix-features">
+                            <li>Comptabilité complète</li>
+                            <li>Gestion multi-dossiers</li>
+                            <li>Rapports financiers</li>
+                            <li>Facturation clients et fournisseurs</li>
+                        </ul>
+                        <button class="btn btn-primary btn-login" onclick="App.basculerInscription(true)">Essai gratuit 14 jours</button>
+                    </div>
+                    <p class="login-toggle"><a href="#" onclick="App.basculerInscription(false); return false;">Retour à la connexion</a></p>
+                </div>
+            </div>
+
+            <!-- Écran abonnement requis (essai expiré) -->
+            <div id="ecran-abonnement-requis" style="display: none;">
+                <div class="abonnement-requis-contenu">
+                    <h2>Votre essai est terminé</h2>
+                    <p class="abonnement-requis-msg">Votre période d'essai gratuit de 14 jours est terminée.</p>
+                    <div class="prix-card">
+                        <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
+                        <p class="abonnement-requis-info">Pour continuer à utiliser le logiciel, veuillez vous abonner.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-login" onclick="App.deconnecter()">Déconnexion</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Écran de sélection de dossier -->
     <div id="ecran-dossiers" class="ecran-dossiers">
         <div class="dossiers-header">
@@ -15,6 +96,7 @@
         </div>
         <div class="dossiers-actions">
             <button class="btn btn-primary" onclick="App.afficherCreationDossier()">+ Nouveau dossier</button>
+            <button class="btn btn-secondary" onclick="App.deconnecter()" style="margin-left: 10px;">Déconnexion</button>
         </div>
         <div id="dossiers-liste" class="dossiers-container">
             <!-- Liste des dossiers générée dynamiquement -->
@@ -35,6 +117,8 @@
                     <button onclick="App.importer()">Importer</button>
                     <hr>
                     <button onclick="App.confirmerSuppressionDossier()">Supprimer ce dossier</button>
+                    <hr>
+                    <button onclick="App.deconnecter()">Déconnexion</button>
                 </div>
             </div>
             <div class="menu-item">
@@ -64,6 +148,7 @@
             <div class="menu-spacer"></div>
             <div class="menu-info">
                 <span id="entreprise-nom">Votre Entreprise</span>
+                <span id="utilisateur-email" class="menu-email"></span>
             </div>
         </nav>
 
@@ -176,7 +261,12 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
     <!-- Scripts -->
+    <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/models/compte.js"></script>
     <script src="js/models/transaction.js"></script>

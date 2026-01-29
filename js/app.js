@@ -9,17 +9,37 @@ const App = {
      * Détecte le dernier dossier ou affiche l'écran de sélection
      */
     init() {
-        // Migration V1: détecter les anciennes données sans dossier
-        this.migrerDonneesV1();
+        // Initialiser Firebase Auth avec callbacks
+        Auth.init(
+            // Callback: utilisateur connecté
+            (utilisateur) => {
+                this._mettreAJourEmailMenu(utilisateur.email);
 
-        const dernierDossierId = Storage.getDernierDossier();
-        const dossiers = Storage.getDossiers();
+                // Vérifier l'accès : propriétaire ou essai actif
+                if (Auth.estProprietaire() || Auth.essaiActif()) {
+                    document.getElementById('ecran-login').style.display = 'none';
 
-        if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
-            this.ouvrirDossierExistant(dernierDossierId);
-        } else {
-            this.afficherEcranDossiers();
-        }
+                    // Migration V1: détecter les anciennes données sans dossier
+                    this.migrerDonneesV1();
+
+                    const dernierDossierId = Storage.getDernierDossier();
+                    const dossiers = Storage.getDossiers();
+
+                    if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
+                        this.ouvrirDossierExistant(dernierDossierId);
+                    } else {
+                        this.afficherEcranDossiers();
+                    }
+                } else {
+                    // Essai expiré → écran abonnement requis
+                    this.afficherAbonnementRequis();
+                }
+            },
+            // Callback: utilisateur déconnecté
+            () => {
+                this.afficherEcranLogin();
+            }
+        );
     },
 
     /**
@@ -109,12 +129,148 @@ const App = {
         }
     },
 
+    // ========== AUTHENTIFICATION ==========
+
+    /**
+     * Affiche l'écran de connexion
+     */
+    afficherEcranLogin() {
+        document.getElementById('ecran-login').style.display = '';
+        document.getElementById('ecran-dossiers').style.display = 'none';
+        document.getElementById('app-principal').style.display = 'none';
+        this._mettreAJourEmailMenu('');
+        // Réinitialiser les formulaires
+        this.basculerInscription(false);
+        document.getElementById('login-erreur').style.display = 'none';
+        document.getElementById('inscription-erreur').style.display = 'none';
+        document.getElementById('ecran-prix').style.display = 'none';
+        document.getElementById('ecran-abonnement-requis').style.display = 'none';
+    },
+
+    /**
+     * Bascule entre le formulaire de connexion et d'inscription
+     */
+    basculerInscription(afficherInscription) {
+        document.getElementById('form-connexion').style.display = afficherInscription ? 'none' : '';
+        document.getElementById('form-inscription').style.display = afficherInscription ? '' : 'none';
+        document.getElementById('ecran-prix').style.display = 'none';
+        document.getElementById('ecran-abonnement-requis').style.display = 'none';
+        document.getElementById('login-erreur').style.display = 'none';
+        document.getElementById('inscription-erreur').style.display = 'none';
+    },
+
+    /**
+     * Affiche l'écran de prix (9,95$/mois) dans la login-card
+     */
+    afficherPrix() {
+        document.getElementById('form-connexion').style.display = 'none';
+        document.getElementById('form-inscription').style.display = 'none';
+        document.getElementById('ecran-abonnement-requis').style.display = 'none';
+        document.getElementById('ecran-prix').style.display = '';
+    },
+
+    /**
+     * Affiche l'écran de blocage quand l'essai est expiré
+     */
+    afficherAbonnementRequis() {
+        document.getElementById('ecran-login').style.display = '';
+        document.getElementById('ecran-dossiers').style.display = 'none';
+        document.getElementById('app-principal').style.display = 'none';
+        document.getElementById('form-connexion').style.display = 'none';
+        document.getElementById('form-inscription').style.display = 'none';
+        document.getElementById('ecran-prix').style.display = 'none';
+        document.getElementById('ecran-abonnement-requis').style.display = '';
+    },
+
+    /**
+     * Soumet le formulaire de connexion
+     */
+    async soumettreConnexion(event) {
+        event.preventDefault();
+        const email = document.getElementById('login-email').value.trim();
+        const mdp = document.getElementById('login-mdp').value;
+        const erreurDiv = document.getElementById('login-erreur');
+        const btn = document.getElementById('btn-connexion');
+
+        erreurDiv.style.display = 'none';
+        btn.disabled = true;
+        btn.textContent = 'Connexion...';
+
+        try {
+            await Auth.connecter(email, mdp);
+            // onAuthStateChanged gère la suite
+        } catch (erreur) {
+            erreurDiv.textContent = erreur;
+            erreurDiv.style.display = '';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Se connecter';
+        }
+    },
+
+    /**
+     * Soumet le formulaire d'inscription
+     */
+    async soumettreInscription(event) {
+        event.preventDefault();
+        const email = document.getElementById('inscription-email').value.trim();
+        const mdp = document.getElementById('inscription-mdp').value;
+        const mdpConfirm = document.getElementById('inscription-mdp-confirm').value;
+        const erreurDiv = document.getElementById('inscription-erreur');
+        const btn = document.getElementById('btn-inscription');
+
+        erreurDiv.style.display = 'none';
+
+        if (mdp !== mdpConfirm) {
+            erreurDiv.textContent = 'Les mots de passe ne correspondent pas.';
+            erreurDiv.style.display = '';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Création...';
+
+        try {
+            await Auth.inscrire(email, mdp);
+            // onAuthStateChanged gère la suite
+        } catch (erreur) {
+            erreurDiv.textContent = erreur;
+            erreurDiv.style.display = '';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Créer le compte';
+        }
+    },
+
+    /**
+     * Déconnexion de l'utilisateur
+     */
+    async deconnecter() {
+        try {
+            await Auth.deconnecter();
+            // onAuthStateChanged gère la suite
+        } catch (erreur) {
+            this.notification('Erreur lors de la déconnexion: ' + erreur, 'danger');
+        }
+    },
+
+    /**
+     * Met à jour l'email affiché dans la barre de menu
+     */
+    _mettreAJourEmailMenu(email) {
+        const el = document.getElementById('utilisateur-email');
+        if (el) {
+            el.textContent = email || '';
+        }
+    },
+
     // ========== GESTION DES DOSSIERS ==========
 
     /**
      * Affiche l'écran de sélection de dossiers
      */
     afficherEcranDossiers() {
+        document.getElementById('ecran-login').style.display = 'none';
         document.getElementById('ecran-dossiers').style.display = '';
         document.getElementById('app-principal').style.display = 'none';
 
@@ -156,6 +312,7 @@ const App = {
         Storage.activerDossier(id);
         Storage.init();
 
+        document.getElementById('ecran-login').style.display = 'none';
         document.getElementById('ecran-dossiers').style.display = 'none';
         document.getElementById('app-principal').style.display = '';
 

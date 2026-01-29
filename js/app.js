@@ -160,6 +160,27 @@ const App = {
     },
 
     /**
+     * Envoie un courriel de réinitialisation du mot de passe
+     */
+    async reinitialiserMotDePasse() {
+        const email = document.getElementById('login-email').value.trim();
+        if (!email) {
+            const erreurDiv = document.getElementById('login-erreur');
+            erreurDiv.textContent = 'Entrez votre courriel avant de cliquer sur "Mot de passe oublié".';
+            erreurDiv.style.display = '';
+            return;
+        }
+        try {
+            await Auth.reinitialiserMotDePasse(email);
+            this.notification('Un courriel de réinitialisation a été envoyé à ' + email, 'success');
+        } catch (erreur) {
+            const erreurDiv = document.getElementById('login-erreur');
+            erreurDiv.textContent = erreur;
+            erreurDiv.style.display = '';
+        }
+    },
+
+    /**
      * Affiche l'écran de prix (9,95$/mois) dans la login-card
      */
     afficherPrix() {

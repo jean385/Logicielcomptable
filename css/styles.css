@@ -943,6 +943,22 @@ tr:hover {
     text-decoration: underline;
 }
 
+.login-mdp-oublie {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+.login-mdp-oublie a {
+    color: var(--text-light);
+    text-decoration: none;
+}
+
+.login-mdp-oublie a:hover {
+    text-decoration: underline;
+    color: var(--accent-color);
+}
+
 /* Email utilisateur dans la barre de menu */
 .menu-email {
     font-size: 11px;

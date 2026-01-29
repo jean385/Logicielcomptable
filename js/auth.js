@@ -73,6 +73,14 @@ const Auth = {
      * Déconnexion
      * @returns {Promise}
      */
+    async reinitialiserMotDePasse(email) {
+        try {
+            await firebase.auth().sendPasswordResetEmail(email);
+        } catch (erreur) {
+            throw this._traduireErreur(erreur);
+        }
+    },
+
     async deconnecter() {
         try {
             await firebase.auth().signOut();

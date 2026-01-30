@@ -1,13 +1,82 @@
 /**
  * Couche d'abstraction pour le stockage de données
- * Utilise localStorage mais peut être migré vers API REST
- * Supporte la gestion multi-dossiers
+ * Cache-first : lecture synchrone depuis le cache mémoire,
+ * écriture asynchrone vers Firebase Firestore en arrière-plan.
+ * Supporte la gestion multi-dossiers.
  */
 
 const Storage = {
     MASTER_PREFIX: 'comptabilite_',
     PREFIX: 'comptabilite_',
     activeDossierId: null,
+
+    // Cache mémoire et Firestore
+    _cache: {},
+    _masterCache: {},
+    _db: null,
+    _uid: null,
+    _writeQueue: [],
+    _writingInProgress: false,
+    _firestoreConnected: false,
+
+    /**
+     * Initialise Firestore et charge les données maître (dossiers, dernierDossier)
+     * Appelé une seule fois après le login.
+     * Retourne { success: boolean, error?: string }
+     */
+    async initFirestore(uid) {
+        this._uid = uid;
+        this._db = firebase.firestore();
+        this._firestoreConnected = false;
+
+        // Charger les données maître depuis Firestore
+        try {
+            const userDoc = await this._db.collection('users').doc(uid).get();
+            this._firestoreConnected = true;
+
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                this._masterCache.dossiers = data.dossiers || [];
+                this._masterCache.dernierDossier = data.dernierDossier || null;
+            } else {
+                // Premier usage : créer le document utilisateur
+                this._masterCache.dossiers = [];
+                this._masterCache.dernierDossier = null;
+                await this._db.collection('users').doc(uid).set({
+                    dossiers: [],
+                    dernierDossier: null
+                });
+            }
+            return { success: true };
+        } catch (e) {
+            console.error('Erreur initFirestore:', e);
+            // Fallback : caches vides
+            this._masterCache.dossiers = [];
+            this._masterCache.dernierDossier = null;
+            return { success: false, error: e.message || e.code || 'Erreur inconnue' };
+        }
+    },
+
+    /**
+     * Charge toutes les clés d'un dossier depuis Firestore dans le cache mémoire
+     */
+    async chargerDossierDepuisFirestore(dossierId) {
+        this._cache = {};
+        if (!this._db || !this._uid) return;
+
+        try {
+            const snapshot = await this._db
+                .collection('users').doc(this._uid)
+                .collection('dossiers').doc(dossierId)
+                .collection('data').get();
+
+            snapshot.forEach(doc => {
+                this._cache[doc.id] = doc.data().value;
+            });
+        } catch (e) {
+            console.error('Erreur chargement dossier Firestore:', e);
+        }
+    },
 
     /**
      * Initialise le stockage avec les données par défaut si nécessaire
@@ -23,51 +92,116 @@ const Storage = {
     },
 
     /**
-     * Récupère une valeur du stockage
+     * Récupère une valeur du cache mémoire (synchrone)
      */
     get(key) {
-        const data = localStorage.getItem(this.PREFIX + key);
-        if (data === null) return null;
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            return data;
-        }
+        const value = this._cache[key];
+        if (value === undefined) return null;
+        return value;
     },
 
     /**
-     * Stocke une valeur
+     * Stocke une valeur dans le cache + envoie à Firestore en arrière-plan
      */
     set(key, value) {
-        localStorage.setItem(this.PREFIX + key, JSON.stringify(value));
+        this._cache[key] = value;
+        this._enqueueWrite(key, value);
     },
 
     /**
-     * Supprime une valeur
+     * Supprime une valeur du cache + supprime le doc Firestore
      */
     remove(key) {
-        localStorage.removeItem(this.PREFIX + key);
-    },
-
-    /**
-     * Récupère une valeur avec le préfixe maître (indépendant du dossier)
-     */
-    getMaster(key) {
-        const data = localStorage.getItem(this.MASTER_PREFIX + key);
-        if (data === null) return null;
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            return data;
+        delete this._cache[key];
+        if (this._db && this._uid && this.activeDossierId) {
+            this._db
+                .collection('users').doc(this._uid)
+                .collection('dossiers').doc(this.activeDossierId)
+                .collection('data').doc(key)
+                .delete()
+                .catch(e => console.error('Erreur suppression Firestore:', e));
         }
     },
 
     /**
-     * Stocke une valeur avec le préfixe maître (indépendant du dossier)
+     * Récupère une valeur maître depuis le cache (synchrone)
+     */
+    getMaster(key) {
+        const value = this._masterCache[key];
+        if (value === undefined) return null;
+        return value;
+    },
+
+    /**
+     * Stocke une valeur maître dans le cache + met à jour le doc utilisateur Firestore
+     * Retourne une Promise pour permettre l'attente de la confirmation
      */
     setMaster(key, value) {
-        localStorage.setItem(this.MASTER_PREFIX + key, JSON.stringify(value));
+        this._masterCache[key] = value;
+        if (this._db && this._uid) {
+            return this._db.collection('users').doc(this._uid).update({
+                [key]: value
+            }).catch(e => {
+                console.error('Erreur écriture maître Firestore:', e);
+                throw e;
+            });
+        }
+        return Promise.resolve();
     },
+
+    // ========== FILE D'ATTENTE D'ÉCRITURE ==========
+
+    /**
+     * Ajoute une écriture à la file d'attente
+     */
+    _enqueueWrite(key, value) {
+        // Remplacer si la même clé est déjà en attente
+        const existing = this._writeQueue.findIndex(w => w.key === key);
+        if (existing !== -1) {
+            this._writeQueue[existing].value = value;
+        } else {
+            this._writeQueue.push({ key, value });
+        }
+        this._processWriteQueue();
+    },
+
+    /**
+     * Traite la file d'attente d'écritures Firestore
+     */
+    async _processWriteQueue() {
+        if (this._writingInProgress) return;
+        if (this._writeQueue.length === 0) return;
+        if (!this._db || !this._uid || !this.activeDossierId) return;
+
+        this._writingInProgress = true;
+
+        while (this._writeQueue.length > 0) {
+            const { key, value } = this._writeQueue.shift();
+            try {
+                await this._db
+                    .collection('users').doc(this._uid)
+                    .collection('dossiers').doc(this.activeDossierId)
+                    .collection('data').doc(key)
+                    .set({ value: value });
+            } catch (e) {
+                console.error('Erreur écriture Firestore:', key, e);
+            }
+        }
+
+        this._writingInProgress = false;
+    },
+
+    /**
+     * Attend que toutes les écritures en attente soient terminées
+     */
+    async _flushWriteQueue() {
+        // Si une écriture est déjà en cours, attendre qu'elle termine
+        while (this._writingInProgress || this._writeQueue.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+    },
+
+    // ========== UTILITAIRES ==========
 
     /**
      * Retourne la date du jour en format YYYY-MM-DD (fuseau local)
@@ -101,16 +235,17 @@ const Storage = {
     },
 
     /**
-     * Sauvegarde la liste des dossiers
+     * Sauvegarde la liste des dossiers (retourne la Promise Firestore)
      */
     saveDossiers(dossiers) {
-        this.setMaster('dossiers', dossiers);
+        return this.setMaster('dossiers', dossiers);
     },
 
     /**
      * Crée un nouveau dossier et retourne son ID
+     * Attend la confirmation Firestore pour les données critiques (liste de dossiers)
      */
-    creerDossier(infoEntreprise) {
+    async creerDossier(infoEntreprise) {
         const id = this.generateId();
         const dossiers = this.getDossiers();
 
@@ -121,19 +256,24 @@ const Storage = {
             dernierAcces: new Date().toISOString()
         });
 
-        this.saveDossiers(dossiers);
+        // Attendre la sauvegarde Firestore de la liste de dossiers (critique)
+        await this.saveDossiers(dossiers);
         this.activerDossier(id);
+        this._cache = {};
         this.initDefaultData();
         this.set('initialized', true);
 
         // Sauvegarder les infos entreprise enrichies
         this.set('entreprise', infoEntreprise);
 
+        // Attendre que la file d'écriture se vide (données du dossier)
+        await this._flushWriteQueue();
+
         return id;
     },
 
     /**
-     * Active un dossier (change le préfixe de stockage)
+     * Active un dossier (met à jour le préfixe et les métadonnées)
      */
     activerDossier(id) {
         this.activeDossierId = id;
@@ -150,29 +290,47 @@ const Storage = {
     },
 
     /**
-     * Supprime un dossier et toutes ses données
+     * Supprime un dossier et toutes ses données Firestore
      */
-    supprimerDossier(id) {
-        const prefixDossier = this.MASTER_PREFIX + id + '_';
+    async supprimerDossier(id) {
+        // Supprimer les docs Firestore du dossier
+        if (this._db && this._uid) {
+            try {
+                const dataRef = this._db
+                    .collection('users').doc(this._uid)
+                    .collection('dossiers').doc(id)
+                    .collection('data');
 
-        // Supprimer toutes les clés du dossier
-        const keys = Object.keys(localStorage).filter(k => k.startsWith(prefixDossier));
-        keys.forEach(k => localStorage.removeItem(k));
+                const snapshot = await dataRef.get();
+                const batch = this._db.batch();
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+
+                // Supprimer le document dossier lui-même
+                await this._db
+                    .collection('users').doc(this._uid)
+                    .collection('dossiers').doc(id)
+                    .delete();
+            } catch (e) {
+                console.error('Erreur suppression dossier Firestore:', e);
+            }
+        }
 
         // Retirer du registre
         let dossiers = this.getDossiers();
         dossiers = dossiers.filter(d => d.id !== id);
-        this.saveDossiers(dossiers);
+        await this.saveDossiers(dossiers);
 
         // Si c'était le dossier actif, désactiver
         if (this.activeDossierId === id) {
             this.activeDossierId = null;
             this.PREFIX = this.MASTER_PREFIX;
+            this._cache = {};
         }
 
         // Nettoyer le dernier dossier si c'était celui-ci
         if (this.getMaster('dernierDossier') === id) {
-            localStorage.removeItem(this.MASTER_PREFIX + 'dernierDossier');
+            this.setMaster('dernierDossier', null);
         }
     },
 
@@ -381,11 +539,28 @@ const Storage = {
     /**
      * Réinitialise toutes les données du dossier actif
      */
-    reinitialiser() {
+    async reinitialiser() {
         if (!this.activeDossierId) return;
-        const prefixDossier = this.MASTER_PREFIX + this.activeDossierId + '_';
-        const keys = Object.keys(localStorage).filter(k => k.startsWith(prefixDossier));
-        keys.forEach(k => localStorage.removeItem(k));
+
+        // Supprimer tous les docs Firestore du dossier
+        if (this._db && this._uid) {
+            try {
+                const dataRef = this._db
+                    .collection('users').doc(this._uid)
+                    .collection('dossiers').doc(this.activeDossierId)
+                    .collection('data');
+
+                const snapshot = await dataRef.get();
+                const batch = this._db.batch();
+                snapshot.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            } catch (e) {
+                console.error('Erreur réinitialisation Firestore:', e);
+            }
+        }
+
+        // Vider le cache et réinitialiser
+        this._cache = {};
         this.initDefaultData();
         this.set('initialized', true);
     }

@@ -12,22 +12,45 @@ const App = {
         // Initialiser Firebase Auth avec callbacks
         Auth.init(
             // Callback: utilisateur connecté
-            (utilisateur) => {
+            async (utilisateur) => {
                 this._mettreAJourEmailMenu(utilisateur.email);
 
                 // Vérifier l'accès : propriétaire ou essai actif
                 if (Auth.estProprietaire() || Auth.essaiActif()) {
                     document.getElementById('ecran-login').style.display = 'none';
 
-                    // Migration V1: détecter les anciennes données sans dossier
-                    this.migrerDonneesV1();
+                    // Initialiser Firestore et charger les données maître
+                    this._afficherChargement(true);
+                    try {
+                        const result = await Storage.initFirestore(utilisateur.uid);
 
-                    const dernierDossierId = Storage.getDernierDossier();
-                    const dossiers = Storage.getDossiers();
+                        if (!result.success) {
+                            this.notification(
+                                'Erreur de connexion à la base de données: ' + result.error +
+                                '. Vos données ne seront pas sauvegardées.',
+                                'danger'
+                            );
+                        }
 
-                    if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
-                        this.ouvrirDossierExistant(dernierDossierId);
-                    } else {
+                        // Migration localStorage → Firestore (une seule fois)
+                        await this.migrerLocalStorageVersFirestore();
+
+                        // Migration V1: détecter les anciennes données sans dossier
+                        this.migrerDonneesV1();
+
+                        const dernierDossierId = Storage.getDernierDossier();
+                        const dossiers = Storage.getDossiers();
+
+                        if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
+                            await this.ouvrirDossierExistant(dernierDossierId);
+                        } else {
+                            this._afficherChargement(false);
+                            this.afficherEcranDossiers();
+                        }
+                    } catch (e) {
+                        console.error('Erreur initialisation:', e);
+                        this._afficherChargement(false);
+                        this.notification('Erreur d\'initialisation: ' + e.message, 'danger');
                         this.afficherEcranDossiers();
                     }
                 } else {
@@ -40,6 +63,104 @@ const App = {
                 this.afficherEcranLogin();
             }
         );
+    },
+
+    // ========== MIGRATION LOCALSTORAGE → FIRESTORE ==========
+
+    /**
+     * Migre les données existantes de localStorage vers Firestore
+     * Ne s'exécute qu'une seule fois (marqueur: comptabilite_firestore_migrated)
+     */
+    async migrerLocalStorageVersFirestore() {
+        // Vérifier si la migration a déjà été effectuée
+        if (localStorage.getItem('comptabilite_firestore_migrated')) return;
+
+        // Vérifier s'il y a des données localStorage à migrer
+        const dossiersMaster = localStorage.getItem('comptabilite_dossiers');
+        if (!dossiersMaster) {
+            // Rien à migrer
+            localStorage.setItem('comptabilite_firestore_migrated', 'true');
+            return;
+        }
+
+        console.log('Migration localStorage → Firestore en cours...');
+
+        try {
+            let dossiers;
+            try {
+                dossiers = JSON.parse(dossiersMaster);
+            } catch (e) {
+                dossiers = [];
+            }
+
+            if (!Array.isArray(dossiers) || dossiers.length === 0) {
+                localStorage.setItem('comptabilite_firestore_migrated', 'true');
+                return;
+            }
+
+            // Vérifier si Firestore a déjà des dossiers (éviter doublon)
+            const dossiersFirestore = Storage.getDossiers();
+            if (dossiersFirestore.length > 0) {
+                localStorage.setItem('comptabilite_firestore_migrated', 'true');
+                return;
+            }
+
+            // Sauvegarder les dossiers dans le master cache
+            Storage._masterCache.dossiers = dossiers;
+
+            const dernierDossier = localStorage.getItem('comptabilite_dernierDossier');
+            if (dernierDossier) {
+                try {
+                    Storage._masterCache.dernierDossier = JSON.parse(dernierDossier);
+                } catch (e) {
+                    Storage._masterCache.dernierDossier = dernierDossier;
+                }
+            }
+
+            // Écrire le document maître dans Firestore
+            await Storage._db.collection('users').doc(Storage._uid).set({
+                dossiers: Storage._masterCache.dossiers,
+                dernierDossier: Storage._masterCache.dernierDossier
+            });
+
+            // Pour chaque dossier, migrer les données
+            const cles = [
+                'initialized', 'entreprise', 'taxes', 'exercice', 'comptes',
+                'transactions', 'clients', 'fournisseurs', 'factures',
+                'projets', 'immobilisations', 'amortissements', 'logo'
+            ];
+
+            for (const dossier of dossiers) {
+                const prefix = 'comptabilite_' + dossier.id + '_';
+
+                for (const cle of cles) {
+                    const raw = localStorage.getItem(prefix + cle);
+                    if (raw !== null) {
+                        let value;
+                        try {
+                            value = JSON.parse(raw);
+                        } catch (e) {
+                            value = raw;
+                        }
+
+                        await Storage._db
+                            .collection('users').doc(Storage._uid)
+                            .collection('dossiers').doc(dossier.id)
+                            .collection('data').doc(cle)
+                            .set({ value: value });
+                    }
+                }
+
+                console.log('Dossier migré:', dossier.nom);
+            }
+
+            // Marquer la migration comme complétée
+            localStorage.setItem('comptabilite_firestore_migrated', 'true');
+            console.log('Migration localStorage → Firestore terminée.');
+
+        } catch (e) {
+            console.error('Erreur migration localStorage → Firestore:', e);
+        }
     },
 
     /**
@@ -99,6 +220,7 @@ const App = {
 
             // Activer le dossier et copier les données
             Storage.activerDossier(id);
+            Storage._cache = {};
             Storage.initDefaultData();
             Storage.set('initialized', true);
 
@@ -329,25 +451,37 @@ const App = {
     /**
      * Ouvre un dossier existant et affiche l'application
      */
-    ouvrirDossierExistant(id) {
-        Storage.activerDossier(id);
-        Storage.init();
+    async ouvrirDossierExistant(id) {
+        this._afficherChargement(true);
 
-        document.getElementById('ecran-login').style.display = 'none';
-        document.getElementById('ecran-dossiers').style.display = 'none';
-        document.getElementById('app-principal').style.display = '';
+        try {
+            // Charger les données du dossier depuis Firestore
+            await Storage.chargerDossierDepuisFirestore(id);
 
-        // Mettre à jour le nom de l'entreprise dans la barre
-        const entreprise = Storage.get('entreprise');
-        if (entreprise) {
-            const nom = entreprise.nomCommercial || entreprise.nom || 'Votre Entreprise';
-            document.getElementById('entreprise-nom').textContent = nom;
+            Storage.activerDossier(id);
+            Storage.init();
+
+            document.getElementById('ecran-login').style.display = 'none';
+            document.getElementById('ecran-dossiers').style.display = 'none';
+            document.getElementById('app-principal').style.display = '';
+
+            // Mettre à jour le nom de l'entreprise dans la barre
+            const entreprise = Storage.get('entreprise');
+            if (entreprise) {
+                const nom = entreprise.nomCommercial || entreprise.nom || 'Votre Entreprise';
+                document.getElementById('entreprise-nom').textContent = nom;
+            }
+
+            this.mettreAJourDashboard();
+            this.afficherPage('accueil');
+
+            console.log('Dossier ouvert:', id);
+        } catch (e) {
+            console.error('Erreur ouverture dossier:', e);
+            this.notification('Erreur lors de l\'ouverture du dossier', 'danger');
+        } finally {
+            this._afficherChargement(false);
         }
-
-        this.mettreAJourDashboard();
-        this.afficherPage('accueil');
-
-        console.log('Dossier ouvert:', id);
     },
 
     /**
@@ -493,7 +627,7 @@ const App = {
     /**
      * Crée un nouveau dossier à partir du formulaire
      */
-    creerNouveauDossier(event) {
+    async creerNouveauDossier(event) {
         event.preventDefault();
 
         const infoEntreprise = {
@@ -514,22 +648,33 @@ const App = {
             siteWeb: document.getElementById('nd-siteWeb').value.trim()
         };
 
-        const id = Storage.creerDossier(infoEntreprise);
+        this._afficherChargement(true);
 
-        // Mettre à jour l'exercice si spécifié
-        const exerciceDebut = document.getElementById('nd-exerciceDebut').value;
-        const exerciceFin = document.getElementById('nd-exerciceFin').value;
-        if (exerciceDebut && exerciceFin) {
-            Storage.set('exercice', {
-                debut: exerciceDebut,
-                fin: exerciceFin,
-                actif: true
-            });
+        try {
+            const id = await Storage.creerDossier(infoEntreprise);
+
+            // Mettre à jour l'exercice si spécifié
+            const exerciceDebut = document.getElementById('nd-exerciceDebut').value;
+            const exerciceFin = document.getElementById('nd-exerciceFin').value;
+            if (exerciceDebut && exerciceFin) {
+                Storage.set('exercice', {
+                    debut: exerciceDebut,
+                    fin: exerciceFin,
+                    actif: true
+                });
+            }
+
+            this.fermerModal();
+            await this.ouvrirDossierExistant(id);
+            this.notification('Dossier créé et sauvegardé avec succès', 'success');
+        } catch (e) {
+            console.error('Erreur création dossier:', e);
+            this._afficherChargement(false);
+            this.notification(
+                'Erreur lors de la sauvegarde du dossier dans Firestore: ' + e.message,
+                'danger'
+            );
         }
-
-        this.fermerModal();
-        this.ouvrirDossierExistant(id);
-        this.notification('Dossier créé avec succès', 'success');
     },
 
     /**
@@ -559,17 +704,51 @@ const App = {
     /**
      * Exécute la suppression du dossier actif
      */
-    executerSuppressionDossier() {
+    async executerSuppressionDossier() {
         const id = Storage.activeDossierId;
         if (!id) return;
 
-        Storage.supprimerDossier(id);
-        this.fermerModal();
-        this.afficherEcranDossiers();
-        this.notification('Dossier supprimé', 'success');
+        this._afficherChargement(true);
+        try {
+            await Storage.supprimerDossier(id);
+            this.fermerModal();
+            this.afficherEcranDossiers();
+            this.notification('Dossier supprimé', 'success');
+        } catch (e) {
+            console.error('Erreur suppression dossier:', e);
+            this.notification('Erreur lors de la suppression', 'danger');
+        } finally {
+            this._afficherChargement(false);
+        }
     },
 
     // ========== NAVIGATION ET UI ==========
+
+    /**
+     * Affiche ou masque l'overlay de chargement
+     */
+    _afficherChargement(afficher) {
+        let overlay = document.getElementById('overlay-chargement');
+        if (afficher) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'overlay-chargement';
+                overlay.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(255,255,255,0.85); z-index: 9999;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 18px; color: #333;
+                `;
+                overlay.textContent = 'Chargement...';
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+        } else {
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+        }
+    },
 
     /**
      * Met à jour les stats du dashboard

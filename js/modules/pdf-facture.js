@@ -42,15 +42,12 @@ const PdfFacture = {
         // Logo (si présent, avec ratio proportionnel)
         if (logo) {
             try {
-                const img = new Image();
-                img.src = logo;
-                const maxW = 45;
-                const maxH = 25;
-                let logoW = img.width || maxW;
-                let logoH = img.height || maxH;
-                const ratio = Math.min(maxW / logoW, maxH / logoH);
-                logoW = logoW * ratio;
-                logoH = logoH * ratio;
+                const props = doc.getImageProperties(logo);
+                const maxW = 40;
+                const maxH = 20;
+                const ratio = Math.min(maxW / props.width, maxH / props.height);
+                const logoW = props.width * ratio;
+                const logoH = props.height * ratio;
                 doc.addImage(logo, 'PNG', margin, y, logoW, logoH);
                 logoEndX = margin + logoW + 5;
             } catch (e) {

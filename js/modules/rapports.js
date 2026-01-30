@@ -8,7 +8,7 @@ const Rapports = {
      * Affiche le bilan
      */
     afficherBilan() {
-        const date = new Date().toISOString().split('T')[0];
+        const date = Storage.aujourdhui();
 
         App.ouvrirModal('Bilan', `
             <div class="toolbar" style="margin-bottom: 20px;">
@@ -386,7 +386,7 @@ const Rapports = {
                 <div class="rapport-header">
                     <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
                     <p>Balance de vérification</p>
-                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                    <p>Au ${Transaction.formaterDate(Storage.aujourdhui())}</p>
                 </div>
 
                 <table style="width: 100%;">
@@ -643,7 +643,7 @@ const Rapports = {
                 <div class="rapport-header">
                     <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
                     <p>Rentabilité par projet</p>
-                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                    <p>Au ${Transaction.formaterDate(Storage.aujourdhui())}</p>
                 </div>
 
                 <table style="width: 100%;">
@@ -772,7 +772,7 @@ const Rapports = {
                 <div class="rapport-header">
                     <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
                     <p>Âge des comptes clients</p>
-                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                    <p>Au ${Transaction.formaterDate(Storage.aujourdhui())}</p>
                 </div>
 
                 <table style="width: 100%;">
@@ -889,7 +889,7 @@ const Rapports = {
                 <div class="rapport-header">
                     <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
                     <p>Âge des comptes fournisseurs</p>
-                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                    <p>Au ${Transaction.formaterDate(Storage.aujourdhui())}</p>
                 </div>
 
                 <table style="width: 100%;">

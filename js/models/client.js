@@ -214,6 +214,6 @@ const Client = {
             'net60': 60
         };
         date.setDate(date.getDate() + (jours[conditions] || 30));
-        return date.toISOString().split('T')[0];
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     }
 };

@@ -236,7 +236,7 @@ const General = {
             </tr>`;
         }).join('');
 
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         App.ouvrirModal('Contre-passation', `
             <div class="alert alert-info">
@@ -335,7 +335,7 @@ const General = {
      * Ouvre le formulaire de nouvelle écriture pré-rempli pour correction
      */
     ouvrirNouvelleEcritureCorrigee(transactionOriginale, motif) {
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         // Générer les lignes pré-remplies
         let lignesHtml = '';
@@ -602,7 +602,7 @@ const General = {
      * Render le formulaire de nouvelle écriture
      */
     renderNouvelleEcriture() {
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         return `
             <div class="ecritures-form">

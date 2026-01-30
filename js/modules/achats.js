@@ -953,7 +953,7 @@ const Achats = {
      * Render formulaire nouvelle facture achat
      */
     renderNouvelleFacture() {
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         return `
             <div class="ecritures-form">

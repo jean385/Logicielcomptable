@@ -97,8 +97,8 @@ const Facture = {
             id: Storage.generateId(),
             type: 'vente',
             numero: this.genererNumero('FACT'),
-            date: facture.date || new Date().toISOString().split('T')[0],
-            echeance: Client.calculerEcheance(facture.date || new Date().toISOString().split('T')[0], client.conditions),
+            date: facture.date || Storage.aujourdhui(),
+            echeance: Client.calculerEcheance(facture.date || Storage.aujourdhui(), client.conditions),
             clientId: facture.clientId,
             clientNom: client.nom,
             projetId: facture.projetId || null,
@@ -184,8 +184,8 @@ const Facture = {
             type: 'achat',
             numero: facture.numeroFournisseur || this.genererNumero('ACH'),
             numeroInterne: this.genererNumero('ACH'),
-            date: facture.date || new Date().toISOString().split('T')[0],
-            echeance: Fournisseur.calculerEcheance(facture.date || new Date().toISOString().split('T')[0], fournisseur.conditions),
+            date: facture.date || Storage.aujourdhui(),
+            echeance: Fournisseur.calculerEcheance(facture.date || Storage.aujourdhui(), fournisseur.conditions),
             fournisseurId: facture.fournisseurId,
             fournisseurNom: fournisseur.nom,
             projetId: facture.projetId || null,
@@ -375,7 +375,7 @@ const Facture = {
         }
 
         const transaction = Transaction.creer({
-            date: date || new Date().toISOString().split('T')[0],
+            date: date || Storage.aujourdhui(),
             description: description,
             reference: facture.numero,
             lignes: lignes,
@@ -394,7 +394,7 @@ const Facture = {
             facture.paiements = [];
         }
         facture.paiements.push({
-            date: date || new Date().toISOString().split('T')[0],
+            date: date || Storage.aujourdhui(),
             montant: montantPaiement,
             transactionId: transaction.id
         });

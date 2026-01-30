@@ -680,7 +680,7 @@ const App = {
         const entreprise = Storage.get('entreprise');
         const nom = (entreprise.nomCommercial || entreprise.nom || 'comptabilite');
         const nomFichier = nom.replace(/[^a-z0-9àâäéèêëïîôùûüçÀÂÄÉÈÊËÏÎÔÙÛÜÇ]/gi, '_');
-        const date = new Date().toISOString().split('T')[0];
+        const date = Storage.aujourdhui();
 
         const a = document.createElement('a');
         a.href = url;
@@ -788,7 +788,7 @@ const App = {
             <form onsubmit="App.executerFermeture(event)">
                 <div class="form-group">
                     <label>Date de fermeture</label>
-                    <input type="date" id="fermeture-date" value="${new Date().toISOString().split('T')[0]}" required>
+                    <input type="date" id="fermeture-date" value="${Storage.aujourdhui()}" required>
                 </div>
                 <div style="text-align: right; margin-top: 20px;">
                     <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>

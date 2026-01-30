@@ -49,7 +49,7 @@ const Encaissements = {
      * Render le formulaire d'encaissement
      */
     renderNouvelEncaissement() {
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         return `
             <div class="ecritures-form">

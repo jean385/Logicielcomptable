@@ -60,7 +60,7 @@ const Transaction = {
 
         const nouvelleTransaction = {
             id: Storage.generateId(),
-            date: transaction.date || new Date().toISOString().split('T')[0],
+            date: transaction.date || Storage.aujourdhui(),
             description: transaction.description,
             reference: transaction.reference || '',
             projetId: transaction.projetId || null,
@@ -124,7 +124,7 @@ const Transaction = {
      */
     genererReference(prefixe = 'EC') {
         const transactions = this.getAll();
-        const aujourdhui = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const aujourdhui = Storage.aujourdhui().replace(/-/g, '');
         const count = transactions.filter(t =>
             t.reference && t.reference.startsWith(prefixe + aujourdhui)
         ).length + 1;

@@ -54,7 +54,7 @@ const Paiements = {
      * Render le formulaire de paiement
      */
     renderNouveauPaiement() {
-        const aujourdhui = new Date().toISOString().split('T')[0];
+        const aujourdhui = Storage.aujourdhui();
 
         return `
             <div class="ecritures-form">

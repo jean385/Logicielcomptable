@@ -133,6 +133,24 @@ const Auth = {
     },
 
     /**
+     * Vérifie si l'utilisateur a un abonnement actif dans Firestore
+     * @returns {Promise<boolean>}
+     */
+    async abonnementActif() {
+        if (!this.utilisateur) return false;
+        try {
+            const doc = await firebase.firestore()
+                .collection('users').doc(this.utilisateur.uid).get();
+            const data = doc.data();
+            if (!data || !data.subscription) return false;
+            return data.subscription.status === 'active';
+        } catch (e) {
+            console.error('Erreur vérification abonnement:', e);
+            return false;
+        }
+    },
+
+    /**
      * Traduit les codes d'erreur Firebase en messages français
      * @param {Object} erreur - Erreur Firebase
      * @returns {string} Message d'erreur traduit

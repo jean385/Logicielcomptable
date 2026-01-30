@@ -27,6 +27,7 @@ const Parametres = {
                     <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('categories')">Catégories</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('abonnement')">Abonnement</button>
                 </div>
 
                 <div id="tab-entreprise" class="tab-content active">
@@ -43,6 +44,10 @@ const Parametres = {
 
                 <div id="tab-exercice" class="tab-content">
                     ${this.renderExercice()}
+                </div>
+
+                <div id="tab-abonnement" class="tab-content">
+                    ${this.renderAbonnement()}
                 </div>
 
                 <div class="form-section" style="margin-top: 30px; padding: 20px; background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px;">
@@ -66,6 +71,7 @@ const Parametres = {
                     <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('projets')">Projets</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('abonnement')">Abonnement</button>
                 </div>
 
                 <div id="tab-entreprise" class="tab-content active">
@@ -87,6 +93,10 @@ const Parametres = {
                 <div id="tab-projets" class="tab-content">
                     ${this.renderProjets()}
                 </div>
+
+                <div id="tab-abonnement" class="tab-content">
+                    ${this.renderAbonnement()}
+                </div>
             `;
         }
     },
@@ -103,6 +113,9 @@ const Parametres = {
 
         if (onglet === 'projets') {
             document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        }
+        if (onglet === 'abonnement') {
+            document.getElementById('tab-abonnement').innerHTML = this.renderAbonnement();
         }
     },
 
@@ -436,6 +449,94 @@ const Parametres = {
         }
 
         App.notification('Informations enregistrées avec succès', 'success');
+    },
+
+    /**
+     * Render l'onglet Abonnement
+     */
+    renderAbonnement() {
+        // On charge les données de manière asynchrone et on met à jour le DOM
+        const uid = Auth.getUtilisateur() ? Auth.getUtilisateur().uid : null;
+        const containerId = 'abonnement-contenu';
+
+        // Contenu par défaut (chargement)
+        setTimeout(async () => {
+            const container = document.getElementById(containerId);
+            if (!container || !uid) return;
+
+            try {
+                const doc = await firebase.firestore().collection('users').doc(uid).get();
+                const data = doc.data();
+                const sub = data && data.subscription ? data.subscription : null;
+                const status = sub ? sub.status : 'none';
+
+                const statusLabels = {
+                    'active': 'Actif',
+                    'canceled': 'Annulé',
+                    'past_due': 'Paiement en retard',
+                    'none': 'Aucun abonnement'
+                };
+
+                let periodEnd = '';
+                if (sub && sub.currentPeriodEnd) {
+                    const date = new Date(sub.currentPeriodEnd * 1000);
+                    periodEnd = date.toLocaleDateString('fr-CA');
+                }
+
+                let html = `
+                    <div class="abonnement-info">
+                        <div class="abonnement-info-row">
+                            <span class="abonnement-info-label">Statut</span>
+                            <span class="abonnement-badge abonnement-badge-${status}">${statusLabels[status] || status}</span>
+                        </div>
+                `;
+
+                if (periodEnd && status === 'active') {
+                    html += `
+                        <div class="abonnement-info-row">
+                            <span class="abonnement-info-label">Prochain renouvellement</span>
+                            <span>${periodEnd}</span>
+                        </div>
+                    `;
+                    if (sub.cancelAtPeriodEnd) {
+                        html += `
+                            <div class="alert alert-warning" style="margin-top: 10px;">
+                                Votre abonnement sera annulé le ${periodEnd}. Vous conservez l'accès jusqu'à cette date.
+                            </div>
+                        `;
+                    }
+                }
+
+                html += '</div>';
+
+                if (status === 'active' || status === 'past_due') {
+                    html += `<button class="btn btn-primary" id="btn-gerer-abonnement" onclick="App.gererAbonnement()">Gérer mon abonnement</button>`;
+                } else {
+                    html += `<button class="btn btn-stripe" id="btn-souscrire" onclick="App.souscrireAbonnement()">S'abonner — 9,95 $/mois</button>`;
+                }
+
+                if (Auth.estProprietaire()) {
+                    html += `<p style="margin-top: 15px; color: var(--text-light); font-style: italic;">Vous êtes le propriétaire du système — accès illimité.</p>`;
+                } else if (Auth.essaiActif()) {
+                    const jours = Auth.joursRestants();
+                    html += `<p style="margin-top: 15px; color: var(--text-light);">Essai gratuit : ${jours} jour${jours > 1 ? 's' : ''} restant${jours > 1 ? 's' : ''}.</p>`;
+                }
+
+                container.innerHTML = html;
+            } catch (e) {
+                console.error('Erreur chargement abonnement:', e);
+                container.innerHTML = '<p class="text-light">Impossible de charger les informations d\'abonnement.</p>';
+            }
+        }, 0);
+
+        return `
+            <div class="rapport-container">
+                <h3>Abonnement</h3>
+                <div id="${containerId}">
+                    <p class="text-light">Chargement...</p>
+                </div>
+            </div>
+        `;
     },
 
     /**

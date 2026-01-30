@@ -15,9 +15,13 @@ const App = {
             async (utilisateur) => {
                 this._mettreAJourEmailMenu(utilisateur.email);
 
-                // Vérifier l'accès : propriétaire ou essai actif
-                if (Auth.estProprietaire() || Auth.essaiActif()) {
+                // Vérifier l'accès : propriétaire, essai actif ou abonnement
+                const abonne = await Auth.abonnementActif();
+                if (Auth.estProprietaire() || Auth.essaiActif() || abonne) {
                     document.getElementById('ecran-login').style.display = 'none';
+
+                    // Vérifier retour de Stripe Checkout
+                    this._verifierRetourStripe();
 
                     // Initialiser Firestore et charger les données maître
                     this._afficherChargement(true);
@@ -38,15 +42,9 @@ const App = {
                         // Migration V1: détecter les anciennes données sans dossier
                         this.migrerDonneesV1();
 
-                        const dernierDossierId = Storage.getDernierDossier();
-                        const dossiers = Storage.getDossiers();
-
-                        if (dernierDossierId && dossiers.find(d => d.id === dernierDossierId)) {
-                            await this.ouvrirDossierExistant(dernierDossierId);
-                        } else {
-                            this._afficherChargement(false);
-                            this.afficherEcranDossiers();
-                        }
+                        // Toujours afficher l'écran de sélection de dossiers
+                        this._afficherChargement(false);
+                        this.afficherEcranDossiers();
                     } catch (e) {
                         console.error('Erreur initialisation:', e);
                         this._afficherChargement(false);
@@ -1396,6 +1394,75 @@ const App = {
             this.notification('Erreur lors de la migration: ' + e.message, 'danger');
         } finally {
             this._afficherChargement(false);
+        }
+    },
+
+    // ========== ABONNEMENT STRIPE ==========
+
+    /**
+     * Redirige vers Stripe Checkout pour souscrire à l'abonnement
+     */
+    async souscrireAbonnement() {
+        try {
+            const btn = document.getElementById('btn-souscrire');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Redirection...';
+            }
+
+            const createCheckoutSession = firebase.functions().httpsCallable('createCheckoutSession');
+            const result = await createCheckoutSession();
+            window.location.href = result.data.url;
+        } catch (erreur) {
+            console.error('Erreur souscrire abonnement:', erreur);
+            this.notification('Erreur lors de la redirection vers le paiement. Veuillez réessayer.', 'danger');
+            const btn = document.getElementById('btn-souscrire');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "S'abonner — 9,95 $/mois";
+            }
+        }
+    },
+
+    /**
+     * Redirige vers le portail Stripe pour gérer l'abonnement
+     */
+    async gererAbonnement() {
+        try {
+            const btn = document.getElementById('btn-gerer-abonnement');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Redirection...';
+            }
+
+            const createPortalSession = firebase.functions().httpsCallable('createPortalSession');
+            const result = await createPortalSession();
+            window.location.href = result.data.url;
+        } catch (erreur) {
+            console.error('Erreur gérer abonnement:', erreur);
+            this.notification('Erreur lors de la redirection vers le portail de gestion.', 'danger');
+            const btn = document.getElementById('btn-gerer-abonnement');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Gérer mon abonnement';
+            }
+        }
+    },
+
+    /**
+     * Vérifie les paramètres URL de retour Stripe et affiche une notification
+     */
+    _verifierRetourStripe() {
+        const params = new URLSearchParams(window.location.search);
+        const payment = params.get('payment');
+
+        if (payment === 'success') {
+            this.notification('Paiement réussi! Votre abonnement est maintenant actif.', 'success');
+            // Nettoyer l'URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (payment === 'cancel') {
+            this.notification('Le paiement a été annulé.', 'info');
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     },
 

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Votre Entreprise - Système de Comptabilité</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/menu-bar-extensions.css">
+    <link rel="stylesheet" href="css/onboarding.css">
 </head>
 <body>
     <!-- Page d'accueil marketing / Connexion -->
@@ -234,6 +236,30 @@
                 </div>
             </div>
             <div class="menu-spacer"></div>
+            <div class="menu-actions" id="menu-actions">
+                <!-- Recherche -->
+                <div class="menu-action-item menu-search-wrapper" id="menu-search-wrapper">
+                    <input type="text" id="recherche-globale" class="menu-search-input"
+                           placeholder="Rechercher..." autocomplete="off"
+                           onkeyup="RechercheGlobale.onKeyup(event)" onfocus="RechercheGlobale.onFocus()">
+                    <div id="recherche-resultats" class="menu-search-dropdown"></div>
+                </div>
+                <!-- Création rapide (+) -->
+                <div class="menu-action-item" id="menu-creation-rapide">
+                    <button class="menu-action-btn" onclick="CreationRapide.toggle()" title="Création rapide">+</button>
+                    <div id="creation-rapide-dropdown" class="menu-action-dropdown"></div>
+                </div>
+                <!-- Notifications (cloche) -->
+                <div class="menu-action-item" id="menu-notifications">
+                    <button class="menu-action-btn" onclick="NotificationsCentre.toggle()" title="Notifications">&#x1F514;</button>
+                    <span id="notif-badge" class="menu-notif-badge" style="display:none;">0</span>
+                    <div id="notifications-dropdown" class="menu-action-dropdown menu-action-dropdown-wide"></div>
+                </div>
+                <!-- Support (?) -->
+                <div class="menu-action-item" id="menu-support">
+                    <button class="menu-action-btn" onclick="App.ouvrirSupport()" title="Assistance">?</button>
+                </div>
+            </div>
             <div class="menu-info">
                 <span id="entreprise-nom">Votre Entreprise</span>
                 <span id="utilisateur-email" class="menu-email"></span>
@@ -302,6 +328,12 @@
                         <p class="amount" id="dash-revenus">0,00 $</p>
                     </div>
                 </div>
+
+                <!-- Activités récentes -->
+                <div class="activites-recentes-section" id="activites-recentes-section">
+                    <h3>Activités récentes</h3>
+                    <div id="activites-recentes-liste" class="activites-recentes-liste"></div>
+                </div>
             </div>
 
             <!-- Pages des modules (générées dynamiquement) -->
@@ -361,6 +393,24 @@
         </div>
     </div>
 
+    <!-- Onboarding overlay -->
+    <div id="onboarding-overlay" class="onboarding-overlay" style="display:none;">
+        <div class="onboarding-backdrop" id="onboarding-backdrop"></div>
+        <div class="onboarding-tooltip" id="onboarding-tooltip">
+            <div class="onboarding-tooltip-title" id="onboarding-titre"></div>
+            <div class="onboarding-tooltip-body" id="onboarding-description"></div>
+            <div class="onboarding-tooltip-footer">
+                <span class="onboarding-step-indicator" id="onboarding-etape"></span>
+                <div class="onboarding-tooltip-buttons">
+                    <button class="btn btn-secondary" id="onboarding-btn-precedent" onclick="Onboarding.precedent()">Précédent</button>
+                    <button class="btn btn-secondary" id="onboarding-btn-passer" onclick="Onboarding.passer()">Passer</button>
+                    <button class="btn btn-primary" id="onboarding-btn-suivant" onclick="Onboarding.suivant()">Suivant</button>
+                </div>
+            </div>
+            <div class="onboarding-tooltip-arrow" id="onboarding-arrow"></div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -401,6 +451,11 @@
     <script src="js/modules/autonome-revenus.js"></script>
     <script src="js/modules/autonome-depenses.js"></script>
     <script src="js/modules/autonome-factures.js"></script>
+    <script src="js/modules/activites-recentes.js"></script>
+    <script src="js/modules/recherche-globale.js"></script>
+    <script src="js/modules/creation-rapide.js"></script>
+    <script src="js/modules/notifications-centre.js"></script>
+    <script src="js/modules/onboarding.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -522,6 +522,8 @@ const App = {
             } else {
                 this.mettreAJourDashboard();
                 this.afficherPage('accueil');
+                ActivitesRecentes.render();
+                Onboarding.verifierEtLancer();
             }
 
             console.log('Dossier ouvert:', id, '(mode:', mode + ')');
@@ -954,6 +956,11 @@ const App = {
      * Affiche une notification
      */
     notification(message, type = 'info') {
+        // Alimenter le centre de notifications
+        if (typeof NotificationsCentre !== 'undefined') {
+            NotificationsCentre.ajouter(message, type);
+        }
+
         const notif = document.createElement('div');
         notif.className = `alert alert-${type}`;
         notif.style.cssText = `
@@ -1216,6 +1223,23 @@ const App = {
                     <li>Encaissements et paiements</li>
                     <li>Rapports financiers</li>
                 </ul>
+            </div>
+        `);
+    },
+
+    /**
+     * Ouvre la modale d'assistance / support
+     */
+    ouvrirSupport() {
+        this.ouvrirModal('Assistance', `
+            <div style="text-align: center; padding: 20px 0;">
+                <h3 style="margin-bottom: 15px;">Besoin d'aide?</h3>
+                <p style="color: #555; margin-bottom: 20px;">Notre équipe est disponible pour répondre à vos questions et vous accompagner.</p>
+                <p style="margin-bottom: 10px;"><strong>Courriel :</strong> support@monbilanfinancier.ca</p>
+                <p style="margin-bottom: 20px;"><strong>Horaire :</strong> Lundi au vendredi, 9h à 17h (HE)</p>
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-secondary" onclick="App.fermerModal()">Fermer</button>
+                </div>
             </div>
         `);
     },
@@ -1493,6 +1517,20 @@ document.addEventListener('click', (e) => {
     const authWrapper = document.querySelector('.landing-auth-wrapper');
     if (authWrapper && !authWrapper.contains(e.target)) {
         App.closeAuthMenu();
+    }
+
+    // Fermer les dropdowns de la barre d'actions si on clique à l'extérieur
+    const searchWrapper = document.getElementById('menu-search-wrapper');
+    if (searchWrapper && !searchWrapper.contains(e.target)) {
+        if (typeof RechercheGlobale !== 'undefined') RechercheGlobale.fermer();
+    }
+    const creationRapide = document.getElementById('menu-creation-rapide');
+    if (creationRapide && !creationRapide.contains(e.target)) {
+        if (typeof CreationRapide !== 'undefined') CreationRapide.fermer();
+    }
+    const notifications = document.getElementById('menu-notifications');
+    if (notifications && !notifications.contains(e.target)) {
+        if (typeof NotificationsCentre !== 'undefined') NotificationsCentre.fermer();
     }
 });
 

@@ -1180,6 +1180,18 @@ const Ventes = {
             });
 
             App.notification('Facture ' + facture.numero + ' créée avec succès', 'success');
+
+            // Enregistrer dans les activités récentes
+            if (typeof ActivitesRecentes !== 'undefined') {
+                ActivitesRecentes.enregistrer({
+                    type: 'facture_vente',
+                    description: 'Facture ' + facture.numero + ' créée',
+                    icon: '📤',
+                    entiteId: facture.id,
+                    module: 'ventes'
+                });
+            }
+
             this.afficherOnglet('factures');
             document.getElementById('tab-factures').innerHTML = this.renderFactures();
         } catch (e) {

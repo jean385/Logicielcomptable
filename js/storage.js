@@ -436,6 +436,7 @@ const Storage = {
         if (!this.get('immobilisations')) this.set('immobilisations', []);
         if (!this.get('amortissements')) this.set('amortissements', []);
         if (!this.get('produits')) this.set('produits', []);
+        if (!this.get('activites_recentes')) this.set('activites_recentes', []);
     },
 
     /**
@@ -518,6 +519,7 @@ const Storage = {
         if (!this.get('factures_simples')) this.set('factures_simples', []);
         if (!this.get('clients_frequents')) this.set('clients_frequents', []);
         if (!this.get('produits')) this.set('produits', []);
+        if (!this.get('activites_recentes')) this.set('activites_recentes', []);
     },
 
     /**

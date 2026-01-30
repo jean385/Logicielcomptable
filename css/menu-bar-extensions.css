@@ -1,0 +1,345 @@
+/**
+ * Styles pour les extensions de la barre de menu
+ * Recherche globale, création rapide, notifications, activités récentes
+ */
+
+/* ========== CONTENEUR D'ACTIONS ========== */
+
+.menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+}
+
+.menu-action-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* ========== BOUTONS D'ACTION ========== */
+
+.menu-action-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: #ccc;
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.menu-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* ========== RECHERCHE GLOBALE ========== */
+
+.menu-search-wrapper {
+    position: relative;
+}
+
+.menu-search-input {
+    width: 180px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: width 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.menu-search-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.menu-search-input:focus {
+    width: 260px;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ========== DROPDOWNS (partagés) ========== */
+
+.menu-search-dropdown,
+.menu-action-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 200;
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.menu-search-dropdown {
+    left: 0;
+    right: auto;
+    min-width: 300px;
+}
+
+.menu-action-dropdown-wide {
+    min-width: 320px;
+}
+
+.menu-search-dropdown.active,
+.menu-action-dropdown.active {
+    display: block;
+}
+
+/* ========== RÉSULTATS DE RECHERCHE ========== */
+
+.search-result-group {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-result-group:last-child {
+    border-bottom: none;
+}
+
+.search-result-group-title {
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-result-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    transition: background 0.1s;
+}
+
+.search-result-item:hover {
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.search-result-item .search-result-sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.search-no-results {
+    padding: 16px 14px;
+    color: #888;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ========== CRÉATION RAPIDE DROPDOWN ========== */
+
+.creation-rapide-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.1s;
+}
+
+.creation-rapide-item:hover {
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.creation-rapide-item .cr-icon {
+    font-size: 16px;
+    width: 24px;
+    text-align: center;
+}
+
+/* ========== NOTIFICATIONS DROPDOWN ========== */
+
+.notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.notif-header-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+.notif-header-action {
+    font-size: 12px;
+    color: var(--primary-color);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.notif-header-action:hover {
+    text-decoration: underline;
+}
+
+.notif-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    color: #333;
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-item.notif-unread {
+    background: #f0f7ff;
+}
+
+.notif-item-message {
+    margin-bottom: 4px;
+}
+
+.notif-item-time {
+    font-size: 11px;
+    color: #888;
+}
+
+.notif-empty {
+    padding: 24px 14px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+}
+
+/* ========== BADGE NOTIFICATIONS ========== */
+
+.menu-notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    background: #e53e3e;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 10px;
+    padding: 0 4px;
+    pointer-events: none;
+}
+
+/* ========== SECTION ACTIVITÉS RÉCENTES (Dashboard) ========== */
+
+.activites-recentes-section {
+    margin-top: 30px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.activites-recentes-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.activites-recentes-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activite-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.1s;
+}
+
+.activite-item:last-child {
+    border-bottom: none;
+}
+
+.activite-item:hover {
+    background: var(--hover-bg, #f5f5f5);
+}
+
+.activite-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.activite-contenu {
+    flex: 1;
+    min-width: 0;
+}
+
+.activite-description {
+    font-size: 13px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activite-date {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.activites-vide {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+}
+
+/* ========== RESPONSIVE ========== */
+
+@media (max-width: 768px) {
+    .menu-search-input {
+        width: 120px;
+    }
+
+    .menu-search-input:focus {
+        width: 180px;
+    }
+
+    .menu-actions {
+        gap: 2px;
+    }
+
+    .menu-search-dropdown {
+        min-width: 250px;
+    }
+}

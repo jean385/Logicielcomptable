@@ -261,12 +261,14 @@ const App = {
         document.getElementById('ecran-dossiers').style.display = 'none';
         document.getElementById('app-principal').style.display = 'none';
         this._mettreAJourEmailMenu('');
-        // Réinitialiser les formulaires
-        this.basculerInscription(false);
+        // Réinitialiser les formulaires et fermer le menu
+        document.getElementById('form-connexion').style.display = '';
+        document.getElementById('form-inscription').style.display = 'none';
         document.getElementById('login-erreur').style.display = 'none';
         document.getElementById('inscription-erreur').style.display = 'none';
         document.getElementById('ecran-prix').style.display = 'none';
         document.getElementById('ecran-abonnement-requis').style.display = 'none';
+        this.closeAuthMenu();
     },
 
     /**
@@ -279,6 +281,7 @@ const App = {
         document.getElementById('ecran-abonnement-requis').style.display = 'none';
         document.getElementById('login-erreur').style.display = 'none';
         document.getElementById('inscription-erreur').style.display = 'none';
+        this.openAuthMenu();
     },
 
     /**
@@ -310,6 +313,7 @@ const App = {
         document.getElementById('form-inscription').style.display = 'none';
         document.getElementById('ecran-abonnement-requis').style.display = 'none';
         document.getElementById('ecran-prix').style.display = '';
+        this.openAuthMenu();
     },
 
     /**
@@ -323,6 +327,28 @@ const App = {
         document.getElementById('form-inscription').style.display = 'none';
         document.getElementById('ecran-prix').style.display = 'none';
         document.getElementById('ecran-abonnement-requis').style.display = '';
+        this.openAuthMenu();
+    },
+
+    /**
+     * Bascule le menu déroulant d'authentification
+     */
+    toggleAuthMenu() {
+        document.getElementById('auth-dropdown').classList.toggle('open');
+    },
+
+    /**
+     * Ouvre le menu déroulant d'authentification
+     */
+    openAuthMenu() {
+        document.getElementById('auth-dropdown').classList.add('open');
+    },
+
+    /**
+     * Ferme le menu déroulant d'authentification
+     */
+    closeAuthMenu() {
+        document.getElementById('auth-dropdown').classList.remove('open');
     },
 
     /**
@@ -438,9 +464,14 @@ const App = {
         container.innerHTML = dossiersTries.map(d => {
             const dateCreation = new Date(d.dateCreation).toLocaleDateString('fr-CA');
             const dernierAcces = new Date(d.dernierAcces).toLocaleDateString('fr-CA');
+            const mode = d.mode || 'complet';
+            const modeBadge = mode === 'autonome'
+                ? '<span class="dossier-mode-badge dossier-mode-autonome">Travailleur autonome</span>'
+                : '<span class="dossier-mode-badge dossier-mode-complet">Comptabilité complète</span>';
             return `
                 <div class="dossier-card" onclick="App.ouvrirDossierExistant('${d.id}')">
                     <div class="dossier-nom">${this.escapeHtml(d.nom)}</div>
+                    ${modeBadge}
                     <div class="dossier-date">Créé le ${dateCreation}</div>
                     <div class="dossier-acces">Dernier accès: ${dernierAcces}</div>
                 </div>
@@ -472,15 +503,79 @@ const App = {
                 document.getElementById('entreprise-nom').textContent = nom;
             }
 
-            this.mettreAJourDashboard();
-            this.afficherPage('accueil');
+            // Configurer l'interface selon le mode
+            const mode = Storage.getMode();
+            this._configurerMode(mode);
 
-            console.log('Dossier ouvert:', id);
+            if (mode === 'autonome') {
+                AutonomeDashboard.afficher();
+            } else {
+                this.mettreAJourDashboard();
+                this.afficherPage('accueil');
+            }
+
+            console.log('Dossier ouvert:', id, '(mode:', mode + ')');
         } catch (e) {
             console.error('Erreur ouverture dossier:', e);
             this.notification('Erreur lors de l\'ouverture du dossier', 'danger');
         } finally {
             this._afficherChargement(false);
+        }
+    },
+
+    /**
+     * Configure l'interface (menus, pages visibles) selon le mode du dossier
+     */
+    _configurerMode(mode) {
+        const menuRapports = document.getElementById('menu-rapports');
+        const accueilComplet = document.getElementById('accueil');
+        const accueilAutonome = document.getElementById('accueil-autonome');
+
+        if (mode === 'autonome') {
+            // Cacher le dashboard complet, afficher le dashboard autonome
+            accueilComplet.style.display = 'none';
+            accueilAutonome.style.display = '';
+
+            // Menu Rapports simplifié
+            if (menuRapports) {
+                menuRapports.innerHTML = `
+                    <button onclick="Rapports.afficherEtatResultatsSimple()">État des résultats</button>
+                `;
+            }
+
+            // Menu Outils simplifié (pas de fermeture d'exercice)
+            const menuOutils = document.getElementById('menu-outils');
+            if (menuOutils) {
+                menuOutils.innerHTML = `
+                    <button onclick="App.calculatrice()">Calculatrice</button>
+                `;
+            }
+        } else {
+            // Mode complet : restaurer l'affichage par défaut
+            accueilComplet.style.display = '';
+            accueilAutonome.style.display = 'none';
+
+            if (menuRapports) {
+                menuRapports.innerHTML = `
+                    <button onclick="Rapports.afficherBilan()">Bilan</button>
+                    <button onclick="Rapports.afficherEtatResultats()">État des résultats</button>
+                    <button onclick="Rapports.afficherBalance()">Balance de vérification</button>
+                    <button onclick="Rapports.afficherGrandLivre()">Grand livre</button>
+                    <hr>
+                    <button onclick="Rapports.afficherAgeComptesClients()">Âge des comptes clients</button>
+                    <button onclick="Rapports.afficherAgeComptesFournisseurs()">Âge des comptes fournisseurs</button>
+                    <hr>
+                    <button onclick="Rapports.afficherRentabiliteProjet()">Rentabilité par projet</button>
+                `;
+            }
+
+            const menuOutils = document.getElementById('menu-outils');
+            if (menuOutils) {
+                menuOutils.innerHTML = `
+                    <button onclick="App.calculatrice()">Calculatrice</button>
+                    <button onclick="App.fermetureExercice()">Fermeture d'exercice</button>
+                `;
+            }
         }
     },
 
@@ -498,6 +593,28 @@ const App = {
         // S'assurer que le modal est visible (fonctionne depuis l'écran dossiers ou l'app)
         const contenu = `
             <form id="form-nouveau-dossier" onsubmit="App.creerNouveauDossier(event)">
+                <div class="form-section">
+                    <h4>Type de comptabilité</h4>
+                    <div class="mode-selection">
+                        <label class="mode-card mode-card-selected" onclick="App._selectionnerMode('complet')">
+                            <input type="radio" name="nd-mode" value="complet" checked style="display:none;">
+                            <div class="mode-card-header">
+                                <span class="mode-card-icon">📊</span>
+                                <span class="mode-card-title">Comptabilité complète</span>
+                            </div>
+                            <p class="mode-card-desc">Plan comptable, écritures en partie double, clients, fournisseurs, paiements, encaissements, immobilisations, rapports financiers complets.</p>
+                        </label>
+                        <label class="mode-card" onclick="App._selectionnerMode('autonome')">
+                            <input type="radio" name="nd-mode" value="autonome" style="display:none;">
+                            <div class="mode-card-header">
+                                <span class="mode-card-icon">👤</span>
+                                <span class="mode-card-title">Travailleur autonome</span>
+                            </div>
+                            <p class="mode-card-desc">Suivi simplifié des revenus et dépenses par catégories, facturation simplifiée, état des résultats. Idéal pour les travailleurs autonomes et pigistes.</p>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="form-section">
                     <h4>Identification</h4>
                     <div class="form-row">
@@ -625,10 +742,25 @@ const App = {
     },
 
     /**
+     * Sélectionne le mode de comptabilité dans le formulaire de création
+     */
+    _selectionnerMode(mode) {
+        document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('mode-card-selected'));
+        const radio = document.querySelector(`input[name="nd-mode"][value="${mode}"]`);
+        if (radio) {
+            radio.checked = true;
+            radio.closest('.mode-card').classList.add('mode-card-selected');
+        }
+    },
+
+    /**
      * Crée un nouveau dossier à partir du formulaire
      */
     async creerNouveauDossier(event) {
         event.preventDefault();
+
+        const modeRadio = document.querySelector('input[name="nd-mode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'complet';
 
         const infoEntreprise = {
             nomCommercial: document.getElementById('nd-nomCommercial').value.trim(),
@@ -651,7 +783,7 @@ const App = {
         this._afficherChargement(true);
 
         try {
-            const id = await Storage.creerDossier(infoEntreprise);
+            const id = await Storage.creerDossier(infoEntreprise, mode);
 
             // Mettre à jour l'exercice si spécifié
             const exerciceDebut = document.getElementById('nd-exerciceDebut').value;
@@ -783,8 +915,13 @@ const App = {
      * Retourne à l'accueil
      */
     retourAccueil() {
-        this.afficherPage('accueil');
-        this.mettreAJourDashboard();
+        const mode = Storage.getMode();
+        if (mode === 'autonome') {
+            AutonomeDashboard.afficher();
+        } else {
+            this.afficherPage('accueil');
+            this.mettreAJourDashboard();
+        }
     },
 
     /**
@@ -1073,6 +1210,183 @@ const App = {
         `);
     },
 
+    // ========== MIGRATION AUTONOME → COMPLET ==========
+
+    /**
+     * Affiche la confirmation de migration autonome → complet
+     */
+    confirmerMigrationComplet() {
+        App.ouvrirModal('Passer en comptabilité complète', `
+            <div class="alert alert-warning">
+                <strong>Attention!</strong> Cette opération est <strong>irréversible</strong>.
+                <ul style="margin-top: 10px;">
+                    <li>Vos revenus seront convertis en transactions comptables</li>
+                    <li>Vos dépenses seront convertis en transactions comptables</li>
+                    <li>Vos factures simplifiées seront converties en factures complètes</li>
+                    <li>Vos clients fréquents deviendront des fiches clients</li>
+                    <li>Un plan comptable complet sera initialisé</li>
+                </ul>
+                <p style="margin-top: 10px;">Les données simplifiées seront conservées en archive mais ne seront plus utilisées.</p>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                <button class="btn btn-danger" onclick="App.executerMigrationComplet()">Passer en comptabilité complète</button>
+            </div>
+        `);
+    },
+
+    /**
+     * Exécute la migration du mode autonome vers le mode complet
+     */
+    async executerMigrationComplet() {
+        this._afficherChargement(true);
+
+        try {
+            // 1. Initialiser le plan comptable complet + collections vides
+            Storage.set('comptes', Storage.getPlanComptableDefaut());
+            if (!Storage.get('transactions')) Storage.set('transactions', []);
+            if (!Storage.get('clients')) Storage.set('clients', []);
+            if (!Storage.get('fournisseurs')) Storage.set('fournisseurs', []);
+            if (!Storage.get('factures')) Storage.set('factures', []);
+            if (!Storage.get('projets')) Storage.set('projets', []);
+            if (!Storage.get('immobilisations')) Storage.set('immobilisations', []);
+            if (!Storage.get('amortissements')) Storage.set('amortissements', []);
+
+            // Mapping catégories → comptes
+            const mappingRevenus = {
+                'Services': '4100',
+                'Ventes de produits': '4000',
+                'Commissions': '4300',
+                'Intérêts': '4200',
+                'Subventions': '4300',
+                'Autres revenus': '4300'
+            };
+
+            const mappingDepenses = {
+                'Publicité/marketing': '5700',
+                'Assurances': '5600',
+                'Fournitures bureau': '5400',
+                'Frais bureau (loyer)': '5200',
+                'Frais véhicule': '5910',
+                'Repas/représentation': '5920',
+                'Télécommunications': '5900',
+                'Transport/déplacement': '5910',
+                'Formation': '5990',
+                'Honoraires professionnels': '5950',
+                'Frais bancaires': '5800',
+                'Abonnements/logiciels': '5990',
+                'Autres dépenses': '5990'
+            };
+
+            // 2. Convertir les revenus en transactions
+            const revenus = RevenuDepense.getRevenus();
+            revenus.forEach(r => {
+                const compteRevenu = mappingRevenus[r.categorie] || '4300';
+                Transaction.creer({
+                    date: r.date,
+                    description: r.description + (r.clientNom ? ' (' + r.clientNom + ')' : ''),
+                    reference: r.reference || 'MIG-REV',
+                    lignes: [
+                        { compte: '1000', debit: r.montant, credit: 0 },
+                        { compte: compteRevenu, debit: 0, credit: r.montant }
+                    ],
+                    module: 'general'
+                });
+            });
+
+            // 3. Convertir les dépenses en transactions
+            const depenses = RevenuDepense.getDepenses();
+            depenses.forEach(d => {
+                const compteDepense = mappingDepenses[d.categorie] || '5990';
+                Transaction.creer({
+                    date: d.date,
+                    description: d.description + (d.fournisseurNom ? ' (' + d.fournisseurNom + ')' : ''),
+                    reference: d.reference || 'MIG-DEP',
+                    lignes: [
+                        { compte: compteDepense, debit: d.montant, credit: 0 },
+                        { compte: '1000', debit: 0, credit: d.montant }
+                    ],
+                    module: 'general'
+                });
+            });
+
+            // 4. Convertir les clients fréquents en fiches clients
+            const clientsFrequents = FactureSimple.getClientsFrequents();
+            const clientIdMap = {};
+            clientsFrequents.forEach(cf => {
+                const clientComplet = Client.creer({
+                    nom: cf.nom,
+                    type: 'particulier',
+                    adresse: cf.adresse || '',
+                    ville: cf.ville || '',
+                    province: cf.province || 'QC',
+                    codePostal: cf.codePostal || '',
+                    courriel: cf.courriel || '',
+                    telephone: cf.telephone || ''
+                });
+                clientIdMap[cf.id] = clientComplet.id;
+            });
+
+            // 5. Convertir les factures simplifiées en factures complètes
+            const facturesSimples = FactureSimple.getAll();
+            facturesSimples.forEach(fs => {
+                const clientId = fs.clientFrequentId ? (clientIdMap[fs.clientFrequentId] || null) : null;
+                const lignes = fs.lignes.map(l => ({
+                    description: l.description,
+                    quantite: l.quantite,
+                    prixUnitaire: l.prixUnitaire,
+                    compte: '4100',
+                    sousTotal: l.montant,
+                    tps: 0,
+                    tvq: 0,
+                    total: l.montant
+                }));
+
+                Facture.creer({
+                    type: 'vente',
+                    numero: fs.numero,
+                    date: fs.date,
+                    clientId: clientId,
+                    clientNom: fs.clientNom,
+                    lignes: lignes,
+                    sousTotal: fs.sousTotal,
+                    totalTPS: fs.tps,
+                    totalTVQ: fs.tvq,
+                    total: fs.total,
+                    echeance: fs.echeance || '',
+                    statut: fs.statut === 'payee' ? 'payee' : (fs.statut === 'emise' ? 'emise' : 'brouillon'),
+                    montantPaye: fs.statut === 'payee' ? fs.total : 0,
+                    notes: fs.notes
+                });
+            });
+
+            // 6. Changer le mode du dossier
+            Storage.set('mode', 'complet');
+
+            // Mettre à jour les métadonnées du dossier
+            const dossiers = Storage.getDossiers();
+            const dossier = dossiers.find(d => d.id === Storage.activeDossierId);
+            if (dossier) {
+                dossier.mode = 'complet';
+                Storage.saveDossiers(dossiers);
+            }
+
+            // Attendre que toutes les écritures soient terminées
+            await Storage._flushWriteQueue();
+
+            // 7. Recharger l'interface en mode complet
+            this.fermerModal();
+            await this.ouvrirDossierExistant(Storage.activeDossierId);
+            this.notification('Migration vers la comptabilité complète terminée avec succès!', 'success');
+
+        } catch (e) {
+            console.error('Erreur migration:', e);
+            this.notification('Erreur lors de la migration: ' + e.message, 'danger');
+        } finally {
+            this._afficherChargement(false);
+        }
+    },
+
     // ========== UTILITAIRES ==========
 
     /**
@@ -1095,6 +1409,11 @@ document.addEventListener('click', (e) => {
     const modal = document.getElementById('modal');
     if (e.target === modal) {
         App.fermerModal();
+    }
+    // Fermer le menu auth si on clique à l'extérieur
+    const authWrapper = document.querySelector('.landing-auth-wrapper');
+    if (authWrapper && !authWrapper.contains(e.target)) {
+        App.closeAuthMenu();
     }
 });
 

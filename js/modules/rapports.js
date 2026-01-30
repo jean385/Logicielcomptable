@@ -932,6 +932,121 @@ const Rapports = {
         `;
     },
 
+    // ========== ÉTAT DES RÉSULTATS SIMPLIFIÉ (MODE AUTONOME) ==========
+
+    /**
+     * Affiche l'état des résultats simplifié (mode autonome)
+     * Revenus par catégorie - Dépenses par catégorie = Profit net
+     */
+    afficherEtatResultatsSimple() {
+        const exercice = Storage.get('exercice');
+
+        App.ouvrirModal('État des résultats', `
+            <div class="toolbar" style="margin-bottom: 20px;">
+                <label>Du: </label>
+                <input type="date" id="ers-date-debut" value="${exercice.debut}" onchange="Rapports.genererEtatResultatsSimple()">
+                <label>Au: </label>
+                <input type="date" id="ers-date-fin" value="${exercice.fin}" onchange="Rapports.genererEtatResultatsSimple()">
+                <button class="btn btn-secondary" onclick="Rapports.imprimerRapport()">Imprimer</button>
+            </div>
+            <div id="rapport-ers-contenu">
+                ${this.genererEtatResultatsSimpleHTML(exercice.debut, exercice.fin)}
+            </div>
+        `);
+    },
+
+    genererEtatResultatsSimple() {
+        const debut = document.getElementById('ers-date-debut').value;
+        const fin = document.getElementById('ers-date-fin').value;
+        document.getElementById('rapport-ers-contenu').innerHTML = this.genererEtatResultatsSimpleHTML(debut, fin);
+    },
+
+    genererEtatResultatsSimpleHTML(dateDebut, dateFin) {
+        const entreprise = Storage.get('entreprise');
+        const revenus = RevenuDepense.getRevenusByPeriode(dateDebut, dateFin);
+        const depenses = RevenuDepense.getDepensesByPeriode(dateDebut, dateFin);
+
+        // Agréger par catégorie
+        const revenusParCat = {};
+        let totalRevenus = 0;
+        revenus.forEach(r => {
+            if (!revenusParCat[r.categorie]) revenusParCat[r.categorie] = 0;
+            revenusParCat[r.categorie] += r.montant;
+            totalRevenus += r.montant;
+        });
+
+        const depensesParCat = {};
+        let totalDepenses = 0;
+        depenses.forEach(d => {
+            if (!depensesParCat[d.categorie]) depensesParCat[d.categorie] = 0;
+            depensesParCat[d.categorie] += d.montant;
+            totalDepenses += d.montant;
+        });
+
+        const profitNet = totalRevenus - totalDepenses;
+        const estProfit = profitNet >= 0;
+
+        const fmt = (v) => (v || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' $';
+        const fmtDate = (d) => {
+            if (!d) return '';
+            const parts = d.split('-');
+            return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : d;
+        };
+
+        let revenusHTML = '';
+        Object.keys(revenusParCat).sort().forEach(cat => {
+            revenusHTML += `
+                <div class="rapport-ligne">
+                    <span>${App.escapeHtml(cat)}</span>
+                    <span>${fmt(revenusParCat[cat])}</span>
+                </div>
+            `;
+        });
+
+        let depensesHTML = '';
+        Object.keys(depensesParCat).sort().forEach(cat => {
+            depensesHTML += `
+                <div class="rapport-ligne">
+                    <span>${App.escapeHtml(cat)}</span>
+                    <span>${fmt(depensesParCat[cat])}</span>
+                </div>
+            `;
+        });
+
+        return `
+            <div class="rapport-container" id="rapport-a-imprimer">
+                <div class="rapport-header">
+                    <h2>${App.escapeHtml(entreprise.nomCommercial || entreprise.nom || '')}</h2>
+                    <p>État des résultats</p>
+                    <p>Du ${fmtDate(dateDebut)} au ${fmtDate(dateFin)}</p>
+                </div>
+
+                <div class="rapport-section">
+                    <h3>REVENUS</h3>
+                    ${revenusHTML || '<div class="rapport-ligne"><span>Aucun revenu</span><span>0,00 $</span></div>'}
+                    <div class="rapport-ligne total">
+                        <span>Total des revenus</span>
+                        <span>${fmt(totalRevenus)}</span>
+                    </div>
+                </div>
+
+                <div class="rapport-section">
+                    <h3>DÉPENSES</h3>
+                    ${depensesHTML || '<div class="rapport-ligne"><span>Aucune dépense</span><span>0,00 $</span></div>'}
+                    <div class="rapport-ligne total">
+                        <span>Total des dépenses</span>
+                        <span>${fmt(totalDepenses)}</span>
+                    </div>
+                </div>
+
+                <div class="rapport-ligne grand-total" style="color: ${estProfit ? 'var(--success-color)' : 'var(--danger-color)'}">
+                    <span>${estProfit ? 'BÉNÉFICE NET' : 'PERTE NETTE'}</span>
+                    <span>${fmt(Math.abs(profitNet))}</span>
+                </div>
+            </div>
+        `;
+    },
+
     /**
      * Imprime le rapport courant
      */

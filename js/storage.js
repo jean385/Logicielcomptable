@@ -86,9 +86,22 @@ const Storage = {
         if (!this.activeDossierId) return;
 
         if (!this.get('initialized')) {
-            this.initDefaultData();
+            const mode = this.get('mode') || 'complet';
+            if (mode === 'autonome') {
+                this.initDefaultDataAutonome();
+            } else {
+                this.initDefaultData();
+            }
             this.set('initialized', true);
         }
+    },
+
+    /**
+     * Retourne le mode du dossier actif ('complet' ou 'autonome')
+     * Les dossiers sans champ mode sont traités comme 'complet' (backward compatibility)
+     */
+    getMode() {
+        return this.get('mode') || 'complet';
     },
 
     /**
@@ -244,14 +257,17 @@ const Storage = {
     /**
      * Crée un nouveau dossier et retourne son ID
      * Attend la confirmation Firestore pour les données critiques (liste de dossiers)
+     * @param {Object} infoEntreprise - Informations de l'entreprise
+     * @param {string} mode - 'complet' ou 'autonome'
      */
-    async creerDossier(infoEntreprise) {
+    async creerDossier(infoEntreprise, mode = 'complet') {
         const id = this.generateId();
         const dossiers = this.getDossiers();
 
         dossiers.push({
             id: id,
             nom: infoEntreprise.nomCommercial || infoEntreprise.nom || 'Nouveau dossier',
+            mode: mode,
             dateCreation: new Date().toISOString(),
             dernierAcces: new Date().toISOString()
         });
@@ -260,7 +276,15 @@ const Storage = {
         await this.saveDossiers(dossiers);
         this.activerDossier(id);
         this._cache = {};
-        this.initDefaultData();
+
+        // Stocker le mode dans les données du dossier
+        this.set('mode', mode);
+
+        if (mode === 'autonome') {
+            this.initDefaultDataAutonome();
+        } else {
+            this.initDefaultData();
+        }
         this.set('initialized', true);
 
         // Sauvegarder les infos entreprise enrichies
@@ -414,6 +438,87 @@ const Storage = {
     },
 
     /**
+     * Initialise les données par défaut pour le mode autonome (travailleur autonome)
+     */
+    initDefaultDataAutonome() {
+        // Configuration de l'entreprise (schéma réutilisé)
+        if (!this.get('entreprise')) {
+            this.set('entreprise', {
+                nomCommercial: 'Mon Entreprise',
+                raisonSociale: '',
+                adresse: '',
+                ville: '',
+                province: 'QC',
+                codePostal: '',
+                pays: 'Canada',
+                telephone: '',
+                telecopieur: '',
+                courriel: '',
+                siteWeb: '',
+                neq: '',
+                tps: '',
+                tvq: '',
+                dateCreationEntreprise: ''
+            });
+        }
+
+        // Configuration des taxes (réutilisée)
+        if (!this.get('taxes')) {
+            this.set('taxes', {
+                tps: 5.0,
+                tvq: 9.975,
+                appliquerTaxes: true
+            });
+        }
+
+        // Exercice financier (réutilisé)
+        if (!this.get('exercice')) {
+            this.set('exercice', {
+                debut: new Date().getFullYear() + '-01-01',
+                fin: new Date().getFullYear() + '-12-31',
+                actif: true
+            });
+        }
+
+        // Catégories de revenus par défaut
+        if (!this.get('categories_revenus')) {
+            this.set('categories_revenus', [
+                'Services',
+                'Ventes de produits',
+                'Commissions',
+                'Intérêts',
+                'Subventions',
+                'Autres revenus'
+            ]);
+        }
+
+        // Catégories de dépenses par défaut
+        if (!this.get('categories_depenses')) {
+            this.set('categories_depenses', [
+                'Publicité/marketing',
+                'Assurances',
+                'Fournitures bureau',
+                'Frais bureau (loyer)',
+                'Frais véhicule',
+                'Repas/représentation',
+                'Télécommunications',
+                'Transport/déplacement',
+                'Formation',
+                'Honoraires professionnels',
+                'Frais bancaires',
+                'Abonnements/logiciels',
+                'Autres dépenses'
+            ]);
+        }
+
+        // Collections vides pour le mode autonome
+        if (!this.get('revenus')) this.set('revenus', []);
+        if (!this.get('depenses')) this.set('depenses', []);
+        if (!this.get('factures_simples')) this.set('factures_simples', []);
+        if (!this.get('clients_frequents')) this.set('clients_frequents', []);
+    },
+
+    /**
      * Retourne le plan comptable canadien par défaut
      */
     getPlanComptableDefaut() {
@@ -492,22 +597,35 @@ const Storage = {
      * Exporte toutes les données du dossier actif en JSON
      */
     exporterDonnees() {
+        const mode = this.getMode();
         const donnees = {
             version: '2.0',
+            mode: mode,
             dateExport: new Date().toISOString(),
             entreprise: this.get('entreprise'),
             taxes: this.get('taxes'),
             exercice: this.get('exercice'),
-            comptes: this.get('comptes'),
-            transactions: this.get('transactions'),
-            clients: this.get('clients'),
-            fournisseurs: this.get('fournisseurs'),
-            factures: this.get('factures'),
-            projets: this.get('projets'),
-            immobilisations: this.get('immobilisations'),
-            amortissements: this.get('amortissements'),
             logo: this.get('logo')
         };
+
+        if (mode === 'autonome') {
+            donnees.categories_revenus = this.get('categories_revenus');
+            donnees.categories_depenses = this.get('categories_depenses');
+            donnees.revenus = this.get('revenus');
+            donnees.depenses = this.get('depenses');
+            donnees.factures_simples = this.get('factures_simples');
+            donnees.clients_frequents = this.get('clients_frequents');
+        } else {
+            donnees.comptes = this.get('comptes');
+            donnees.transactions = this.get('transactions');
+            donnees.clients = this.get('clients');
+            donnees.fournisseurs = this.get('fournisseurs');
+            donnees.factures = this.get('factures');
+            donnees.projets = this.get('projets');
+            donnees.immobilisations = this.get('immobilisations');
+            donnees.amortissements = this.get('amortissements');
+        }
+
         return JSON.stringify(donnees, null, 2);
     },
 
@@ -517,9 +635,21 @@ const Storage = {
     importerDonnees(jsonString) {
         try {
             const donnees = JSON.parse(jsonString);
+            if (donnees.mode) this.set('mode', donnees.mode);
             if (donnees.entreprise) this.set('entreprise', donnees.entreprise);
             if (donnees.taxes) this.set('taxes', donnees.taxes);
             if (donnees.exercice) this.set('exercice', donnees.exercice);
+            if (donnees.logo) this.set('logo', donnees.logo);
+
+            // Données mode autonome
+            if (donnees.categories_revenus) this.set('categories_revenus', donnees.categories_revenus);
+            if (donnees.categories_depenses) this.set('categories_depenses', donnees.categories_depenses);
+            if (donnees.revenus) this.set('revenus', donnees.revenus);
+            if (donnees.depenses) this.set('depenses', donnees.depenses);
+            if (donnees.factures_simples) this.set('factures_simples', donnees.factures_simples);
+            if (donnees.clients_frequents) this.set('clients_frequents', donnees.clients_frequents);
+
+            // Données mode complet
             if (donnees.comptes) this.set('comptes', donnees.comptes);
             if (donnees.transactions) this.set('transactions', donnees.transactions);
             if (donnees.clients) this.set('clients', donnees.clients);
@@ -528,7 +658,6 @@ const Storage = {
             if (donnees.projets) this.set('projets', donnees.projets);
             if (donnees.immobilisations) this.set('immobilisations', donnees.immobilisations);
             if (donnees.amortissements) this.set('amortissements', donnees.amortissements);
-            if (donnees.logo) this.set('logo', donnees.logo);
             return true;
         } catch (e) {
             console.error('Erreur d\'importation:', e);

@@ -11,42 +11,84 @@ const Parametres = {
         App.afficherPage('module-parametres');
 
         const container = document.getElementById('module-parametres');
-        container.innerHTML = `
-            <div class="module-header">
-                <h1>Paramètres</h1>
-                <button class="btn-retour" onclick="App.retourAccueil()">
-                    ← Retour
-                </button>
-            </div>
+        const mode = Storage.getMode();
 
-            <div class="tabs">
-                <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
-                <button class="tab" onclick="Parametres.afficherOnglet('plan-comptable')">Plan comptable</button>
-                <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
-                <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
-                <button class="tab" onclick="Parametres.afficherOnglet('projets')">Projets</button>
-            </div>
+        if (mode === 'autonome') {
+            container.innerHTML = `
+                <div class="module-header">
+                    <h1>Paramètres</h1>
+                    <button class="btn-retour" onclick="App.retourAccueil()">
+                        ← Retour
+                    </button>
+                </div>
 
-            <div id="tab-entreprise" class="tab-content active">
-                ${this.renderEntreprise()}
-            </div>
+                <div class="tabs">
+                    <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('categories')">Catégories</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
+                </div>
 
-            <div id="tab-plan-comptable" class="tab-content">
-                ${this.renderPlanComptable()}
-            </div>
+                <div id="tab-entreprise" class="tab-content active">
+                    ${this.renderEntreprise()}
+                </div>
 
-            <div id="tab-taxes" class="tab-content">
-                ${this.renderTaxes()}
-            </div>
+                <div id="tab-taxes" class="tab-content">
+                    ${this.renderTaxes()}
+                </div>
 
-            <div id="tab-exercice" class="tab-content">
-                ${this.renderExercice()}
-            </div>
+                <div id="tab-categories" class="tab-content">
+                    ${this.renderCategories()}
+                </div>
 
-            <div id="tab-projets" class="tab-content">
-                ${this.renderProjets()}
-            </div>
-        `;
+                <div id="tab-exercice" class="tab-content">
+                    ${this.renderExercice()}
+                </div>
+
+                <div class="form-section" style="margin-top: 30px; padding: 20px; background: var(--card-background); border: 1px solid var(--border-color); border-radius: 4px;">
+                    <h4>Changer de mode</h4>
+                    <p style="margin-bottom: 10px; color: var(--text-light);">Si votre entreprise grossit, vous pouvez passer en mode comptabilité complète avec plan comptable, écritures en partie double, et rapports financiers avancés.</p>
+                    <button class="btn btn-danger" onclick="App.confirmerMigrationComplet()">Passer en comptabilité complète</button>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="module-header">
+                    <h1>Paramètres</h1>
+                    <button class="btn-retour" onclick="App.retourAccueil()">
+                        ← Retour
+                    </button>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('plan-comptable')">Plan comptable</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('projets')">Projets</button>
+                </div>
+
+                <div id="tab-entreprise" class="tab-content active">
+                    ${this.renderEntreprise()}
+                </div>
+
+                <div id="tab-plan-comptable" class="tab-content">
+                    ${this.renderPlanComptable()}
+                </div>
+
+                <div id="tab-taxes" class="tab-content">
+                    ${this.renderTaxes()}
+                </div>
+
+                <div id="tab-exercice" class="tab-content">
+                    ${this.renderExercice()}
+                </div>
+
+                <div id="tab-projets" class="tab-content">
+                    ${this.renderProjets()}
+                </div>
+            `;
+        }
     },
 
     /**
@@ -61,6 +103,87 @@ const Parametres = {
 
         if (onglet === 'projets') {
             document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        }
+    },
+
+    /**
+     * Render l'onglet Catégories (mode autonome)
+     */
+    renderCategories() {
+        const catsRevenus = RevenuDepense.getCategoriesRevenus();
+        const catsDepenses = RevenuDepense.getCategoriesDepenses();
+
+        let revenusHTML = catsRevenus.map(c => `
+            <div class="categorie-item">
+                <span>${App.escapeHtml(c)}</span>
+                <button class="btn btn-danger" onclick="Parametres.supprimerCategorie('revenus', '${App.escapeHtml(c)}')" title="Supprimer">✕</button>
+            </div>
+        `).join('');
+
+        let depensesHTML = catsDepenses.map(c => `
+            <div class="categorie-item">
+                <span>${App.escapeHtml(c)}</span>
+                <button class="btn btn-danger" onclick="Parametres.supprimerCategorie('depenses', '${App.escapeHtml(c)}')" title="Supprimer">✕</button>
+            </div>
+        `).join('');
+
+        return `
+            <div class="rapport-container">
+                <h3>Catégories de revenus et dépenses</h3>
+
+                <div class="form-row" style="align-items: start;">
+                    <div>
+                        <h4 style="color: var(--primary-color); margin-bottom: 12px;">Catégories de revenus</h4>
+                        <div class="categories-list">${revenusHTML || '<p class="text-light">Aucune catégorie</p>'}</div>
+                        <div style="margin-top: 10px; display: flex; gap: 8px;">
+                            <input type="text" id="nouvelle-cat-revenu" placeholder="Nouvelle catégorie" style="flex: 1; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 3px;">
+                            <button class="btn btn-primary" onclick="Parametres.ajouterCategorie('revenus')">Ajouter</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--primary-color); margin-bottom: 12px;">Catégories de dépenses</h4>
+                        <div class="categories-list">${depensesHTML || '<p class="text-light">Aucune catégorie</p>'}</div>
+                        <div style="margin-top: 10px; display: flex; gap: 8px;">
+                            <input type="text" id="nouvelle-cat-depense" placeholder="Nouvelle catégorie" style="flex: 1; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 3px;">
+                            <button class="btn btn-primary" onclick="Parametres.ajouterCategorie('depenses')">Ajouter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    ajouterCategorie(type) {
+        const inputId = type === 'revenus' ? 'nouvelle-cat-revenu' : 'nouvelle-cat-depense';
+        const input = document.getElementById(inputId);
+        const nom = input.value.trim();
+        if (!nom) return;
+
+        try {
+            if (type === 'revenus') {
+                RevenuDepense.ajouterCategorieRevenu(nom);
+            } else {
+                RevenuDepense.ajouterCategorieDepense(nom);
+            }
+            App.notification('Catégorie ajoutée', 'success');
+            document.getElementById('tab-categories').innerHTML = this.renderCategories();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    supprimerCategorie(type, nom) {
+        if (!confirm('Supprimer la catégorie "' + nom + '"?')) return;
+        try {
+            if (type === 'revenus') {
+                RevenuDepense.supprimerCategorieRevenu(nom);
+            } else {
+                RevenuDepense.supprimerCategorieDepense(nom);
+            }
+            App.notification('Catégorie supprimée', 'success');
+            document.getElementById('tab-categories').innerHTML = this.renderCategories();
+        } catch (e) {
+            App.notification(e.message, 'danger');
         }
     },
 

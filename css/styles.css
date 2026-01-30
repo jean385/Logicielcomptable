@@ -864,48 +864,269 @@ tr:hover {
     color: var(--primary-color);
 }
 
-/* Écran de connexion */
-.ecran-login {
+/* ========== PAGE D'ACCUEIL MARKETING ========== */
+
+.landing-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    background: #ffffff;
+}
+
+/* Navigation fixe */
+.landing-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0 24px;
+    height: 56px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    background: rgba(30, 58, 95, 0.92);
+    backdrop-filter: blur(8px);
 }
 
-.login-card {
-    background: var(--card-background);
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 400px;
-    overflow: hidden;
+.landing-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
 }
 
-.login-header {
-    background: var(--primary-color);
-    padding: 24px;
-    text-align: center;
-}
-
-.login-header h1 {
-    color: white;
-    font-size: 24px;
+.landing-logo {
+    font-size: 22px;
     font-weight: 700;
-    margin-bottom: 4px;
+    color: white;
+    letter-spacing: -0.5px;
 }
 
-.login-header p {
-    color: rgba(255, 255, 255, 0.7);
+.landing-auth-wrapper {
+    position: relative;
+}
+
+.landing-auth-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
     font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.login-card h2 {
+.landing-auth-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Menu déroulant d'authentification */
+.auth-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    width: 340px;
+    overflow: hidden;
+    z-index: 101;
+}
+
+.auth-dropdown.open {
+    display: block;
+}
+
+.auth-dropdown h2 {
     color: var(--primary-color);
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 16px;
+}
+
+/* Section héros */
+.landing-hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('../pomelli_image.png') center center / cover no-repeat;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.landing-hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.landing-hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+}
+
+.landing-hero-content h1 {
+    font-size: 52px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 24px;
+    line-height: 1.15;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.landing-hero-subtitle {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 36px;
+    line-height: 1.5;
+}
+
+.btn-cta {
+    display: inline-block;
+    padding: 14px 36px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(74, 144, 194, 0.4);
+}
+
+.btn-cta:hover {
+    background: var(--accent-dark);
+    box-shadow: 0 6px 24px rgba(74, 144, 194, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Section fonctionnalités */
+.landing-features {
+    padding: 80px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.landing-section-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 48px;
+}
+
+.landing-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.landing-feature-card {
+    background: var(--card-background);
+    padding: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--gray-light);
+    transition: all 0.2s;
+}
+
+.landing-feature-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.landing-feature-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.landing-feature-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.landing-feature-card p {
+    font-size: 13px;
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+/* Section tarification */
+.landing-pricing {
+    padding: 80px 20px;
+    background: var(--background-color);
+    text-align: center;
+}
+
+.landing-pricing-card {
+    max-width: 440px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid var(--accent-color);
+}
+
+.landing-pricing-amount {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.landing-pricing-amount span {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-light);
+}
+
+.landing-pricing-trial {
+    font-size: 14px;
+    color: var(--success-color);
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.landing-pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px 0;
+    text-align: left;
+}
+
+.landing-pricing-features li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--gray-light);
+}
+
+.landing-pricing-features li::before {
+    content: "\2713";
+    color: var(--success-color);
+    font-weight: 700;
+    margin-right: 10px;
+}
+
+.landing-pricing-features li:last-child {
+    border-bottom: none;
+}
+
+/* Pied de page landing */
+.landing-footer {
+    padding: 24px;
+    text-align: center;
+    font-size: 13px;
+    background: var(--primary-color);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 #form-connexion,
@@ -1155,6 +1376,180 @@ tr:hover {
     display: inline-block;
 }
 
+/* ========== MODE SELECTION (Création de dossier) ========== */
+
+.mode-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.mode-card {
+    display: block;
+    cursor: pointer;
+    padding: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-background);
+    transition: all 0.2s ease;
+}
+
+.mode-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: var(--shadow);
+}
+
+.mode-card-selected {
+    border-color: var(--accent-color);
+    background: linear-gradient(to bottom, #f0f7ff, #e8f0fa);
+    box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.mode-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.mode-card-icon {
+    font-size: 28px;
+}
+
+.mode-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.mode-card-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ========== BADGES MODE DOSSIER ========== */
+
+.dossier-mode-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.dossier-mode-complet {
+    background: #d9edf7;
+    color: #31708f;
+    border: 1px solid #bce8f1;
+}
+
+.dossier-mode-autonome {
+    background: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+/* ========== DASHBOARD AUTONOME ========== */
+
+#accueil-autonome h1 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 22px;
+    font-weight: 600;
+    padding: 10px 15px;
+    background: var(--header-bg);
+    color: white;
+    border-radius: 4px 4px 0 0;
+    margin: -20px -20px 20px -20px;
+    padding: 12px 20px;
+}
+
+.autonome-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.autonome-summary .summary-card {
+    border-top: 3px solid var(--primary-color);
+}
+
+.summary-revenus {
+    border-top-color: var(--success-color) !important;
+}
+
+.summary-depenses {
+    border-top-color: var(--danger-color) !important;
+}
+
+.summary-profit {
+    border-top-color: var(--accent-color) !important;
+}
+
+.summary-perte {
+    border-top-color: var(--warning-color) !important;
+}
+
+.autonome-quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.autonome-chart-container {
+    background: var(--card-background);
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+}
+
+.autonome-chart-container h3 {
+    font-size: 14px;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+}
+
+.autonome-chart-container canvas {
+    width: 100% !important;
+    max-height: 280px;
+}
+
+.autonome-modules-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+/* ========== CATÉGORIES (Paramètres autonome) ========== */
+
+.categories-list {
+    min-height: 40px;
+}
+
+.categorie-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--gray-light);
+    font-size: 13px;
+}
+
+.categorie-item:last-child {
+    border-bottom: none;
+}
+
+.categorie-item .btn {
+    padding: 2px 6px;
+    font-size: 10px;
+    min-width: auto;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .modules-grid {
@@ -1162,6 +1557,18 @@ tr:hover {
     }
 
     .dashboard-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .autonome-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .autonome-modules-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .landing-features-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -1173,6 +1580,42 @@ tr:hover {
 
     .dashboard-summary {
         grid-template-columns: 1fr;
+    }
+
+    .autonome-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .autonome-modules-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .landing-hero-content h1 {
+        font-size: 32px;
+    }
+
+    .landing-hero-subtitle {
+        font-size: 16px;
+    }
+
+    .landing-features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-dropdown {
+        width: 290px;
+    }
+
+    .landing-pricing-card {
+        padding: 24px;
+    }
+
+    .mode-selection {
+        grid-template-columns: 1fr;
+    }
+
+    .autonome-quick-actions {
+        flex-direction: column;
     }
 
     .form-row,

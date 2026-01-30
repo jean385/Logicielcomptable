@@ -7,86 +7,160 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Écran de connexion -->
-    <div id="ecran-login" class="ecran-login" style="display: none;">
-        <div class="login-card">
-            <div class="login-header">
-                <h1>Votre Entreprise</h1>
-                <p>Système de comptabilité</p>
-            </div>
+    <!-- Page d'accueil marketing / Connexion -->
+    <div id="ecran-login" class="landing-page" style="display: none;">
+        <!-- Navigation -->
+        <nav class="landing-nav">
+            <div class="landing-nav-left">
+                <span class="landing-logo">Pomelli</span>
+                <div class="landing-auth-wrapper">
+                    <button class="landing-auth-btn" onclick="App.toggleAuthMenu()">Mon Compte &#9662;</button>
+                    <div id="auth-dropdown" class="auth-dropdown">
+                        <!-- Formulaire de connexion -->
+                        <div id="form-connexion">
+                            <h2>Connexion</h2>
+                            <form onsubmit="App.soumettreConnexion(event)">
+                                <div class="form-group">
+                                    <label for="login-email">Courriel</label>
+                                    <input type="email" id="login-email" required placeholder="exemple@courriel.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="login-mdp">Mot de passe</label>
+                                    <input type="password" id="login-mdp" required placeholder="Mot de passe" minlength="6">
+                                </div>
+                                <div id="login-erreur" class="alert alert-danger" style="display: none;"></div>
+                                <button type="submit" class="btn btn-primary btn-login" id="btn-connexion">Se connecter</button>
+                            </form>
+                            <p class="login-mdp-oublie"><a href="#" onclick="App.reinitialiserMotDePasse(); return false;">Mot de passe oublié?</a></p>
+                            <p class="login-toggle">Pas de compte? <a href="#" onclick="App.afficherPrix(); return false;">Créer un compte</a></p>
+                        </div>
 
-            <!-- Formulaire de connexion -->
-            <div id="form-connexion">
-                <h2>Connexion</h2>
-                <form onsubmit="App.soumettreConnexion(event)">
-                    <div class="form-group">
-                        <label for="login-email">Courriel</label>
-                        <input type="email" id="login-email" required placeholder="exemple@courriel.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-mdp">Mot de passe</label>
-                        <input type="password" id="login-mdp" required placeholder="Mot de passe" minlength="6">
-                    </div>
-                    <div id="login-erreur" class="alert alert-danger" style="display: none;"></div>
-                    <button type="submit" class="btn btn-primary btn-login" id="btn-connexion">Se connecter</button>
-                </form>
-                <p class="login-mdp-oublie"><a href="#" onclick="App.reinitialiserMotDePasse(); return false;">Mot de passe oublié?</a></p>
-                <p class="login-toggle">Pas de compte? <a href="#" onclick="App.afficherPrix(); return false;">Créer un compte</a></p>
-            </div>
+                        <!-- Formulaire d'inscription -->
+                        <div id="form-inscription" style="display: none;">
+                            <h2>Créer un compte</h2>
+                            <form onsubmit="App.soumettreInscription(event)">
+                                <div class="form-group">
+                                    <label for="inscription-email">Courriel</label>
+                                    <input type="email" id="inscription-email" required placeholder="exemple@courriel.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inscription-mdp">Mot de passe</label>
+                                    <input type="password" id="inscription-mdp" required placeholder="Minimum 6 caractères" minlength="6">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inscription-mdp-confirm">Confirmer le mot de passe</label>
+                                    <input type="password" id="inscription-mdp-confirm" required placeholder="Confirmer le mot de passe" minlength="6">
+                                </div>
+                                <div id="inscription-erreur" class="alert alert-danger" style="display: none;"></div>
+                                <button type="submit" class="btn btn-primary btn-login" id="btn-inscription">Créer le compte</button>
+                            </form>
+                            <p class="login-toggle">Déjà un compte? <a href="#" onclick="App.basculerInscription(false); return false;">Se connecter</a></p>
+                        </div>
 
-            <!-- Formulaire d'inscription -->
-            <div id="form-inscription" style="display: none;">
-                <h2>Créer un compte</h2>
-                <form onsubmit="App.soumettreInscription(event)">
-                    <div class="form-group">
-                        <label for="inscription-email">Courriel</label>
-                        <input type="email" id="inscription-email" required placeholder="exemple@courriel.com">
-                    </div>
-                    <div class="form-group">
-                        <label for="inscription-mdp">Mot de passe</label>
-                        <input type="password" id="inscription-mdp" required placeholder="Minimum 6 caractères" minlength="6">
-                    </div>
-                    <div class="form-group">
-                        <label for="inscription-mdp-confirm">Confirmer le mot de passe</label>
-                        <input type="password" id="inscription-mdp-confirm" required placeholder="Confirmer le mot de passe" minlength="6">
-                    </div>
-                    <div id="inscription-erreur" class="alert alert-danger" style="display: none;"></div>
-                    <button type="submit" class="btn btn-primary btn-login" id="btn-inscription">Créer le compte</button>
-                </form>
-                <p class="login-toggle">Déjà un compte? <a href="#" onclick="App.basculerInscription(false); return false;">Se connecter</a></p>
-            </div>
+                        <!-- Écran de prix -->
+                        <div id="ecran-prix" style="display: none;">
+                            <div class="prix-contenu">
+                                <h2>Abonnement</h2>
+                                <div class="prix-card">
+                                    <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
+                                    <ul class="prix-features">
+                                        <li>Comptabilité complète</li>
+                                        <li>Gestion multi-dossiers</li>
+                                        <li>Rapports financiers</li>
+                                        <li>Facturation clients et fournisseurs</li>
+                                    </ul>
+                                    <button class="btn btn-primary btn-login" onclick="App.basculerInscription(true)">Essai gratuit 14 jours</button>
+                                </div>
+                                <p class="login-toggle"><a href="#" onclick="App.basculerInscription(false); return false;">Retour à la connexion</a></p>
+                            </div>
+                        </div>
 
-            <!-- Écran de prix -->
-            <div id="ecran-prix" style="display: none;">
-                <div class="prix-contenu">
-                    <h2>Abonnement</h2>
-                    <div class="prix-card">
-                        <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
-                        <ul class="prix-features">
-                            <li>Comptabilité complète</li>
-                            <li>Gestion multi-dossiers</li>
-                            <li>Rapports financiers</li>
-                            <li>Facturation clients et fournisseurs</li>
-                        </ul>
-                        <button class="btn btn-primary btn-login" onclick="App.basculerInscription(true)">Essai gratuit 14 jours</button>
+                        <!-- Écran abonnement requis (essai expiré) -->
+                        <div id="ecran-abonnement-requis" style="display: none;">
+                            <div class="abonnement-requis-contenu">
+                                <h2>Votre essai est terminé</h2>
+                                <p class="abonnement-requis-msg">Votre période d'essai gratuit de 14 jours est terminée.</p>
+                                <div class="prix-card">
+                                    <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
+                                    <p class="abonnement-requis-info">Pour continuer à utiliser le logiciel, veuillez vous abonner.</p>
+                                </div>
+                                <button class="btn btn-secondary btn-login" onclick="App.deconnecter()">Déconnexion</button>
+                            </div>
+                        </div>
                     </div>
-                    <p class="login-toggle"><a href="#" onclick="App.basculerInscription(false); return false;">Retour à la connexion</a></p>
                 </div>
             </div>
+        </nav>
 
-            <!-- Écran abonnement requis (essai expiré) -->
-            <div id="ecran-abonnement-requis" style="display: none;">
-                <div class="abonnement-requis-contenu">
-                    <h2>Votre essai est terminé</h2>
-                    <p class="abonnement-requis-msg">Votre période d'essai gratuit de 14 jours est terminée.</p>
-                    <div class="prix-card">
-                        <div class="prix-montant">9,95 $<span class="prix-periode">/mois</span></div>
-                        <p class="abonnement-requis-info">Pour continuer à utiliser le logiciel, veuillez vous abonner.</p>
-                    </div>
-                    <button class="btn btn-secondary btn-login" onclick="App.deconnecter()">Déconnexion</button>
+        <!-- Section héros avec image d'arrière-plan -->
+        <section class="landing-hero">
+            <div class="landing-hero-overlay"></div>
+            <div class="landing-hero-content">
+                <h1>Simplifiez votre comptabilité sans effort</h1>
+                <p class="landing-hero-subtitle">La solution de comptabilité en ligne conçue pour les entreprises québécoises et les travailleurs autonomes.</p>
+                <button class="btn-cta" onclick="App.afficherPrix()">Essai gratuit 14 jours</button>
+            </div>
+        </section>
+
+        <!-- Section fonctionnalités -->
+        <section class="landing-features">
+            <h2 class="landing-section-title">Tout ce dont vous avez besoin pour gérer vos finances</h2>
+            <div class="landing-features-grid">
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">📊</div>
+                    <h3>Comptabilité complète</h3>
+                    <p>Plan comptable canadien, écritures en partie double, grand livre et journal général. Gérez vos finances avec rigueur et précision.</p>
+                </div>
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">👤</div>
+                    <h3>Mode travailleur autonome</h3>
+                    <p>Suivi simplifié des revenus et dépenses par catégories. Idéal pour les pigistes et travailleurs autonomes qui veulent l'essentiel.</p>
+                </div>
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">📄</div>
+                    <h3>Facturation professionnelle</h3>
+                    <p>Créez et envoyez des factures professionnelles en PDF. Suivi des paiements et gestion des comptes clients intégrés.</p>
+                </div>
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">📈</div>
+                    <h3>Rapports financiers</h3>
+                    <p>Bilan, état des résultats, balance de vérification et plus. Prenez des décisions éclairées grâce à des rapports détaillés.</p>
+                </div>
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">🏢</div>
+                    <h3>Multi-dossiers</h3>
+                    <p>Gérez plusieurs entreprises depuis un seul compte. Chaque dossier est indépendant avec ses propres données et paramètres.</p>
+                </div>
+                <div class="landing-feature-card">
+                    <div class="landing-feature-icon">🧾</div>
+                    <h3>Taxes TPS/TVQ</h3>
+                    <p>Calcul automatique des taxes de vente canadiennes. Configuration flexible des taux de TPS et TVQ selon vos besoins.</p>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Section tarification -->
+        <section class="landing-pricing">
+            <h2 class="landing-section-title">Un prix simple et transparent</h2>
+            <div class="landing-pricing-card">
+                <div class="landing-pricing-amount">9,95 $<span>/mois</span></div>
+                <p class="landing-pricing-trial">Essai gratuit de 14 jours — Aucune carte de crédit requise</p>
+                <ul class="landing-pricing-features">
+                    <li>Comptabilité complète ou mode travailleur autonome</li>
+                    <li>Gestion multi-dossiers illimitée</li>
+                    <li>Facturation PDF professionnelle</li>
+                    <li>Rapports financiers complets</li>
+                    <li>Synchronisation cloud en temps réel</li>
+                    <li>Accès depuis tous vos appareils</li>
+                </ul>
+                <button class="btn-cta" onclick="App.afficherPrix()">Commencer maintenant</button>
+            </div>
+        </section>
+
+        <!-- Pied de page -->
+        <footer class="landing-footer">
+            <p>© 2026 Pomelli — Tous droits réservés</p>
+        </footer>
     </div>
 
     <!-- Écran de sélection de dossier -->
@@ -124,7 +198,7 @@
             </div>
             <div class="menu-item">
                 <span class="menu-title">Rapports</span>
-                <div class="menu-dropdown">
+                <div class="menu-dropdown" id="menu-rapports">
                     <button onclick="Rapports.afficherBilan()">Bilan</button>
                     <button onclick="Rapports.afficherEtatResultats()">État des résultats</button>
                     <button onclick="Rapports.afficherBalance()">Balance de vérification</button>
@@ -138,7 +212,7 @@
             </div>
             <div class="menu-item">
                 <span class="menu-title">Outils</span>
-                <div class="menu-dropdown">
+                <div class="menu-dropdown" id="menu-outils">
                     <button onclick="App.calculatrice()">Calculatrice</button>
                     <button onclick="App.fermetureExercice()">Fermeture d'exercice</button>
                 </div>
@@ -229,6 +303,12 @@
             <div id="module-ventes" class="page"></div>
             <div id="module-rapports" class="page"></div>
             <div id="module-immobilisations" class="page"></div>
+
+            <!-- Pages mode autonome -->
+            <div id="accueil-autonome" class="page"></div>
+            <div id="module-autonome-revenus" class="page"></div>
+            <div id="module-autonome-depenses" class="page"></div>
+            <div id="module-autonome-factures" class="page"></div>
         </main>
     </div>
 
@@ -280,6 +360,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 
+    <!-- Chart.js pour graphiques (mode autonome) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
     <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
@@ -290,6 +373,8 @@
     <script src="js/models/facture.js"></script>
     <script src="js/models/projet.js"></script>
     <script src="js/models/immobilisation.js"></script>
+    <script src="js/models/revenu-depense.js"></script>
+    <script src="js/models/facture-simple.js"></script>
     <script src="js/modules/parametres.js"></script>
     <script src="js/modules/general.js"></script>
     <script src="js/modules/ventes.js"></script>
@@ -300,6 +385,10 @@
     <script src="js/modules/pdf-facture.js"></script>
     <script src="js/modules/email-facture.js"></script>
     <script src="js/modules/immobilisations.js"></script>
+    <script src="js/modules/autonome-dashboard.js"></script>
+    <script src="js/modules/autonome-revenus.js"></script>
+    <script src="js/modules/autonome-depenses.js"></script>
+    <script src="js/modules/autonome-factures.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

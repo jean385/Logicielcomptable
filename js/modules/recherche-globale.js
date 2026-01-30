@@ -84,9 +84,14 @@ const RechercheGlobale = {
             // Recherche dans les factures
             const factures = Facture.getAll();
             factures.forEach(f => {
+                const lignesMatch = Array.isArray(f.lignes) && f.lignes.some(l =>
+                    this._correspond(l.description, terme)
+                );
                 if (this._correspond(f.numero, terme) ||
                     this._correspond(f.clientNom, terme) ||
-                    this._correspond(f.fournisseurNom, terme)) {
+                    this._correspond(f.fournisseurNom, terme) ||
+                    this._correspond(f.notes, terme) ||
+                    lignesMatch) {
                     const type = f.type === 'vente' ? 'Vente' : 'Achat';
                     resultats.push({
                         groupe: 'Factures',
@@ -107,8 +112,13 @@ const RechercheGlobale = {
             // Mode autonome — recherche simplifiée
             const facturesSimples = Storage.get('factures_simples') || [];
             facturesSimples.forEach(f => {
+                const lignesMatch = Array.isArray(f.lignes) && f.lignes.some(l =>
+                    this._correspond(l.description, terme)
+                );
                 if (this._correspond(f.numero, terme) ||
-                    this._correspond(f.clientNom, terme)) {
+                    this._correspond(f.clientNom, terme) ||
+                    this._correspond(f.notes, terme) ||
+                    lignesMatch) {
                     resultats.push({
                         groupe: 'Factures',
                         nom: `${f.numero} — ${f.clientNom || ''}`,

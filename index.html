@@ -130,6 +130,9 @@
                     <button onclick="Rapports.afficherBalance()">Balance de vérification</button>
                     <button onclick="Rapports.afficherGrandLivre()">Grand livre</button>
                     <hr>
+                    <button onclick="Rapports.afficherAgeComptesClients()">Âge des comptes clients</button>
+                    <button onclick="Rapports.afficherAgeComptesFournisseurs()">Âge des comptes fournisseurs</button>
+                    <hr>
                     <button onclick="Rapports.afficherRentabiliteProjet()">Rentabilité par projet</button>
                 </div>
             </div>
@@ -266,6 +269,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
+    <!-- jsPDF pour génération de factures PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+
     <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
@@ -282,6 +289,8 @@
     <script src="js/modules/achats.js"></script>
     <script src="js/modules/paiements.js"></script>
     <script src="js/modules/rapports.js"></script>
+    <script src="js/modules/pdf-facture.js"></script>
+    <script src="js/modules/email-facture.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

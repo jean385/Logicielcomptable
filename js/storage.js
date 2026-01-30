@@ -324,7 +324,8 @@ const Storage = {
             clients: this.get('clients'),
             fournisseurs: this.get('fournisseurs'),
             factures: this.get('factures'),
-            projets: this.get('projets')
+            projets: this.get('projets'),
+            logo: this.get('logo')
         };
         return JSON.stringify(donnees, null, 2);
     },
@@ -344,6 +345,7 @@ const Storage = {
             if (donnees.fournisseurs) this.set('fournisseurs', donnees.fournisseurs);
             if (donnees.factures) this.set('factures', donnees.factures);
             if (donnees.projets) this.set('projets', donnees.projets);
+            if (donnees.logo) this.set('logo', donnees.logo);
             return true;
         } catch (e) {
             console.error('Erreur d\'importation:', e);

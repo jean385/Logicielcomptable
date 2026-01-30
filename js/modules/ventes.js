@@ -84,6 +84,7 @@ const Ventes = {
                     </td>
                     <td class="text-center">
                         <button class="btn btn-secondary" onclick="Ventes.voirFacture('${f.id}')">Voir</button>
+                        <button class="btn btn-secondary" onclick="PdfFacture.generer('${f.id}')" title="Télécharger PDF">PDF</button>
                         ${f.statut !== 'annulee' && f.montantPaye === 0 ? `
                             <button class="btn btn-danger" onclick="Ventes.annulerFacture('${f.id}')">Annuler</button>
                         ` : ''}
@@ -274,6 +275,12 @@ const Ventes = {
                 ${paiementsHtml}
 
                 ${facture.notes ? `<p style="margin-top: 20px;"><strong>Notes:</strong> ${facture.notes}</p>` : ''}
+
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button class="btn btn-secondary" onclick="App.fermerModal()">Fermer</button>
+                    <button class="btn btn-primary" onclick="PdfFacture.generer('${facture.id}')">Générer PDF</button>
+                    <button class="btn btn-primary" onclick="App.fermerModal(); EmailFacture.envoyerParCourriel('${facture.id}')">Envoyer par courriel</button>
+                </div>
             </div>
         `);
     },

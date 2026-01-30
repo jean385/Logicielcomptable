@@ -187,8 +187,94 @@ const Parametres = {
 
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                 </form>
+
+                <div class="form-section" style="margin-top: 30px;">
+                    <h4>Logo de l'entreprise</h4>
+                    <div id="logo-preview-container">
+                        ${this.renderLogoPreview()}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button type="button" class="btn btn-secondary" onclick="Parametres.telechargerLogo()">Choisir une image</button>
+                        <button type="button" class="btn btn-danger" onclick="Parametres.supprimerLogo()" id="btn-supprimer-logo" style="${Storage.get('logo') ? '' : 'display:none;'} margin-left: 5px;">Supprimer le logo</button>
+                        <input type="file" id="input-logo" accept="image/*" style="display: none;" onchange="Parametres.traiterLogo(event)">
+                    </div>
+                </div>
             </div>
         `;
+    },
+
+    /**
+     * Render l'aperçu du logo
+     */
+    renderLogoPreview() {
+        const logo = Storage.get('logo');
+        if (logo) {
+            return '<img src="' + logo + '" alt="Logo" style="max-width: 200px; max-height: 100px; border: 1px solid var(--border-color); padding: 5px; border-radius: 4px;">';
+        }
+        return '<div style="width: 200px; height: 80px; border: 2px dashed var(--border-color); display: flex; align-items: center; justify-content: center; color: #999; border-radius: 4px;">Aucun logo</div>';
+    },
+
+    /**
+     * Ouvre le sélecteur de fichier pour le logo
+     */
+    telechargerLogo() {
+        document.getElementById('input-logo').click();
+    },
+
+    /**
+     * Traite le fichier logo sélectionné (redimensionne via canvas)
+     */
+    traiterLogo(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            App.notification('Veuillez sélectionner un fichier image', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const maxW = 400;
+                const maxH = 200;
+                let w = img.width;
+                let h = img.height;
+
+                if (w > maxW || h > maxH) {
+                    const ratio = Math.min(maxW / w, maxH / h);
+                    w = Math.round(w * ratio);
+                    h = Math.round(h * ratio);
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const base64 = canvas.toDataURL('image/png');
+                Storage.set('logo', base64);
+
+                document.getElementById('logo-preview-container').innerHTML = Parametres.renderLogoPreview();
+                document.getElementById('btn-supprimer-logo').style.display = '';
+                App.notification('Logo enregistré', 'success');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    },
+
+    /**
+     * Supprime le logo
+     */
+    supprimerLogo() {
+        if (!confirm('Supprimer le logo?')) return;
+        Storage.remove('logo');
+        document.getElementById('logo-preview-container').innerHTML = this.renderLogoPreview();
+        document.getElementById('btn-supprimer-logo').style.display = 'none';
+        App.notification('Logo supprimé', 'success');
     },
 
     /**

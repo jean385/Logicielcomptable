@@ -675,6 +675,263 @@ const Rapports = {
         `;
     },
 
+    // ========== ÂGE DES COMPTES ==========
+
+    /**
+     * Calcule le nombre de jours entre une date et aujourd'hui
+     */
+    calculerJoursEcoules(dateStr) {
+        const date = new Date(dateStr);
+        const aujourdhui = new Date();
+        aujourdhui.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
+        return Math.floor((aujourdhui - date) / (1000 * 60 * 60 * 24));
+    },
+
+    /**
+     * Classe un montant dans les tranches d'âge selon le nombre de jours
+     */
+    classerParAge(jours) {
+        if (jours <= 30) return 'courant';
+        if (jours <= 60) return 'j31_60';
+        if (jours <= 90) return 'j61_90';
+        return 'j91plus';
+    },
+
+    /**
+     * Affiche le rapport d'âge des comptes clients
+     */
+    afficherAgeComptesClients() {
+        App.ouvrirModal('Âge des comptes clients', `
+            <div class="toolbar" style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="Rapports.imprimerRapport()">Imprimer</button>
+            </div>
+            <div id="rapport-age-clients-contenu">
+                ${this.genererAgeComptesClientsHTML()}
+            </div>
+        `);
+    },
+
+    /**
+     * Génère le HTML du rapport d'âge des comptes clients
+     */
+    genererAgeComptesClientsHTML() {
+        const entreprise = Storage.get('entreprise');
+        const factures = Facture.getVentes().filter(f =>
+            f.statut !== 'annulee' && f.statut !== 'payee'
+        );
+
+        // Regrouper par client
+        const parClient = {};
+        factures.forEach(f => {
+            const cle = f.clientId || f.clientNom;
+            if (!parClient[cle]) {
+                parClient[cle] = {
+                    nom: f.clientNom,
+                    courant: 0,
+                    j31_60: 0,
+                    j61_90: 0,
+                    j91plus: 0,
+                    total: 0
+                };
+            }
+            const solde = f.total - (f.montantPaye || 0);
+            if (solde <= 0) return;
+            const jours = this.calculerJoursEcoules(f.date);
+            const tranche = this.classerParAge(jours);
+            parClient[cle][tranche] += solde;
+            parClient[cle].total += solde;
+        });
+
+        const clients = Object.values(parClient).sort((a, b) => b.total - a.total);
+
+        let totalCourant = 0, totalJ31 = 0, totalJ61 = 0, totalJ91 = 0, grandTotal = 0;
+
+        let tableRows = '';
+        clients.forEach(c => {
+            totalCourant += c.courant;
+            totalJ31 += c.j31_60;
+            totalJ61 += c.j61_90;
+            totalJ91 += c.j91plus;
+            grandTotal += c.total;
+
+            tableRows += `
+                <tr>
+                    <td>${c.nom}</td>
+                    <td class="text-right">${c.courant ? Transaction.formaterMontant(c.courant) : '-'}</td>
+                    <td class="text-right">${c.j31_60 ? Transaction.formaterMontant(c.j31_60) : '-'}</td>
+                    <td class="text-right">${c.j61_90 ? Transaction.formaterMontant(c.j61_90) : '-'}</td>
+                    <td class="text-right">${c.j91plus ? Transaction.formaterMontant(c.j91plus) : '-'}</td>
+                    <td class="text-right"><strong>${Transaction.formaterMontant(c.total)}</strong></td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="rapport-container" id="rapport-a-imprimer">
+                <div class="rapport-header">
+                    <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
+                    <p>Âge des comptes clients</p>
+                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                </div>
+
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th class="text-right">Courant (0-30 j)</th>
+                            <th class="text-right">31-60 jours</th>
+                            <th class="text-right">61-90 jours</th>
+                            <th class="text-right">90+ jours</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows || '<tr><td colspan="6" class="text-center">Aucun compte client en souffrance</td></tr>'}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; border-top: 2px solid var(--primary-color);">
+                            <td>TOTAUX</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalCourant)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ31)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ61)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ91)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(grandTotal)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                ${totalJ91 > 0 ? `
+                    <div class="alert alert-danger" style="margin-top: 20px;">
+                        <strong>Attention:</strong> ${Transaction.formaterMontant(totalJ91)} en comptes de plus de 90 jours.
+                    </div>
+                ` : ''}
+                ${totalJ61 > 0 && totalJ91 === 0 ? `
+                    <div class="alert alert-warning" style="margin-top: 20px;">
+                        <strong>Avertissement:</strong> ${Transaction.formaterMontant(totalJ61)} en comptes de 61 à 90 jours.
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    },
+
+    /**
+     * Affiche le rapport d'âge des comptes fournisseurs
+     */
+    afficherAgeComptesFournisseurs() {
+        App.ouvrirModal('Âge des comptes fournisseurs', `
+            <div class="toolbar" style="margin-bottom: 20px;">
+                <button class="btn btn-secondary" onclick="Rapports.imprimerRapport()">Imprimer</button>
+            </div>
+            <div id="rapport-age-fournisseurs-contenu">
+                ${this.genererAgeComptesFournisseursHTML()}
+            </div>
+        `);
+    },
+
+    /**
+     * Génère le HTML du rapport d'âge des comptes fournisseurs
+     */
+    genererAgeComptesFournisseursHTML() {
+        const entreprise = Storage.get('entreprise');
+        const factures = Facture.getAchats().filter(f =>
+            f.statut !== 'annulee' && f.statut !== 'payee'
+        );
+
+        // Regrouper par fournisseur
+        const parFournisseur = {};
+        factures.forEach(f => {
+            const cle = f.fournisseurId || f.fournisseurNom;
+            if (!parFournisseur[cle]) {
+                parFournisseur[cle] = {
+                    nom: f.fournisseurNom,
+                    courant: 0,
+                    j31_60: 0,
+                    j61_90: 0,
+                    j91plus: 0,
+                    total: 0
+                };
+            }
+            const solde = f.total - (f.montantPaye || 0);
+            if (solde <= 0) return;
+            const jours = this.calculerJoursEcoules(f.date);
+            const tranche = this.classerParAge(jours);
+            parFournisseur[cle][tranche] += solde;
+            parFournisseur[cle].total += solde;
+        });
+
+        const fournisseurs = Object.values(parFournisseur).sort((a, b) => b.total - a.total);
+
+        let totalCourant = 0, totalJ31 = 0, totalJ61 = 0, totalJ91 = 0, grandTotal = 0;
+
+        let tableRows = '';
+        fournisseurs.forEach(f => {
+            totalCourant += f.courant;
+            totalJ31 += f.j31_60;
+            totalJ61 += f.j61_90;
+            totalJ91 += f.j91plus;
+            grandTotal += f.total;
+
+            tableRows += `
+                <tr>
+                    <td>${f.nom}</td>
+                    <td class="text-right">${f.courant ? Transaction.formaterMontant(f.courant) : '-'}</td>
+                    <td class="text-right">${f.j31_60 ? Transaction.formaterMontant(f.j31_60) : '-'}</td>
+                    <td class="text-right">${f.j61_90 ? Transaction.formaterMontant(f.j61_90) : '-'}</td>
+                    <td class="text-right">${f.j91plus ? Transaction.formaterMontant(f.j91plus) : '-'}</td>
+                    <td class="text-right"><strong>${Transaction.formaterMontant(f.total)}</strong></td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="rapport-container" id="rapport-a-imprimer">
+                <div class="rapport-header">
+                    <h2>${entreprise.nomCommercial || entreprise.nom}</h2>
+                    <p>Âge des comptes fournisseurs</p>
+                    <p>Au ${Transaction.formaterDate(new Date().toISOString().split('T')[0])}</p>
+                </div>
+
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Fournisseur</th>
+                            <th class="text-right">Courant (0-30 j)</th>
+                            <th class="text-right">31-60 jours</th>
+                            <th class="text-right">61-90 jours</th>
+                            <th class="text-right">90+ jours</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows || '<tr><td colspan="6" class="text-center">Aucun compte fournisseur en souffrance</td></tr>'}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; border-top: 2px solid var(--primary-color);">
+                            <td>TOTAUX</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalCourant)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ31)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ61)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(totalJ91)}</td>
+                            <td class="text-right">${Transaction.formaterMontant(grandTotal)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                ${totalJ91 > 0 ? `
+                    <div class="alert alert-danger" style="margin-top: 20px;">
+                        <strong>Attention:</strong> ${Transaction.formaterMontant(totalJ91)} en comptes de plus de 90 jours.
+                    </div>
+                ` : ''}
+                ${totalJ61 > 0 && totalJ91 === 0 ? `
+                    <div class="alert alert-warning" style="margin-top: 20px;">
+                        <strong>Avertissement:</strong> ${Transaction.formaterMontant(totalJ61)} en comptes de 61 à 90 jours.
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    },
+
     /**
      * Imprime le rapport courant
      */

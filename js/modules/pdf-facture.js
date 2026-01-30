@@ -17,6 +17,11 @@ const PdfFacture = {
             return;
         }
 
+        if (!window.jspdf) {
+            App.notification('La librairie jsPDF n\'est pas chargée. Vérifiez votre connexion internet.', 'danger');
+            return;
+        }
+
         const client = Client.getById(facture.clientId);
         const entreprise = Storage.get('entreprise') || {};
         const taxes = Storage.get('taxes') || {};
@@ -24,6 +29,7 @@ const PdfFacture = {
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'letter'); // 8.5x11 pouces
+        const font = 'helvetica';
 
         const pageWidth = doc.internal.pageSize.getWidth();
         const margin = 15;
@@ -47,10 +53,10 @@ const PdfFacture = {
         // Info entreprise (à droite du logo ou à gauche si pas de logo)
         const infoX = logoEndX;
         doc.setFontSize(14);
-        doc.setFont(undefined, 'bold');
+        doc.setFont(font, 'bold');
         doc.text(entreprise.nomCommercial || 'Mon Entreprise', infoX, y + 5);
         doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
+        doc.setFont(font, 'normal');
 
         let infoY = y + 10;
         const adresseLigne = [entreprise.adresse, entreprise.ville, entreprise.province, entreprise.codePostal]
@@ -60,7 +66,7 @@ const PdfFacture = {
             infoY += 4;
         }
         if (entreprise.telephone) {
-            doc.text('Tél: ' + entreprise.telephone, infoX, infoY);
+            doc.text('Tel: ' + entreprise.telephone, infoX, infoY);
             infoY += 4;
         }
         if (entreprise.courriel) {
@@ -90,20 +96,20 @@ const PdfFacture = {
 
         // ========== BLOC FACTURE ==========
         doc.setFontSize(20);
-        doc.setFont(undefined, 'bold');
+        doc.setFont(font, 'bold');
         doc.setTextColor(30, 58, 95);
         doc.text('FACTURE', margin, y);
 
         doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
+        doc.setFont(font, 'normal');
         doc.setTextColor(0, 0, 0);
 
         const factureInfoX = pageWidth - margin - 60;
-        doc.setFont(undefined, 'bold');
-        doc.text('Numéro:', factureInfoX, y - 8);
+        doc.setFont(font, 'bold');
+        doc.text('Numero:', factureInfoX, y - 8);
         doc.text('Date:', factureInfoX, y - 3);
-        doc.text('Échéance:', factureInfoX, y + 2);
-        doc.setFont(undefined, 'normal');
+        doc.text('Echeance:', factureInfoX, y + 2);
+        doc.setFont(font, 'normal');
         doc.text(facture.numero, factureInfoX + 30, y - 8);
         doc.text(facture.date, factureInfoX + 30, y - 3);
         doc.text(facture.echeance || '-', factureInfoX + 30, y + 2);
@@ -112,9 +118,9 @@ const PdfFacture = {
 
         // ========== BLOC CLIENT ==========
         doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.text('Facturer à:', margin, y);
-        doc.setFont(undefined, 'normal');
+        doc.setFont(font, 'bold');
+        doc.text('Facturer a:', margin, y);
+        doc.setFont(font, 'normal');
         y += 5;
 
         doc.setFontSize(10);
@@ -129,7 +135,7 @@ const PdfFacture = {
                 y += 4;
             }
             if (client.telephone) {
-                doc.text('Tél: ' + client.telephone, margin, y);
+                doc.text('Tel: ' + client.telephone, margin, y);
                 y += 4;
             }
             if (client.courriel) {
@@ -144,7 +150,7 @@ const PdfFacture = {
         const tableColumns = [
             { header: '#', dataKey: 'num' },
             { header: 'Description', dataKey: 'description' },
-            { header: 'Qté', dataKey: 'quantite' },
+            { header: 'Qte', dataKey: 'quantite' },
             { header: 'Prix unitaire', dataKey: 'prixUnitaire' },
             { header: 'Montant', dataKey: 'montant' }
         ];
@@ -191,7 +197,7 @@ const PdfFacture = {
         doc.setFontSize(10);
 
         // Sous-total
-        doc.setFont(undefined, 'normal');
+        doc.setFont(font, 'normal');
         doc.text('Sous-total:', totauxX, y, { align: 'right' });
         doc.text(this.formaterMontant(facture.sousTotal), totauxValX, y, { align: 'right' });
         y += 5;
@@ -217,25 +223,25 @@ const PdfFacture = {
 
         // Total
         doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
+        doc.setFont(font, 'bold');
         doc.text('Total:', totauxX, y, { align: 'right' });
         doc.text(this.formaterMontant(facture.total), totauxValX, y, { align: 'right' });
         y += 6;
 
         // Montant payé
         doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
+        doc.setFont(font, 'normal');
         if (facture.montantPaye > 0) {
-            doc.text('Montant payé:', totauxX, y, { align: 'right' });
+            doc.text('Montant paye:', totauxX, y, { align: 'right' });
             doc.text(this.formaterMontant(facture.montantPaye), totauxValX, y, { align: 'right' });
             y += 5;
         }
 
         // Solde dû
-        doc.setFont(undefined, 'bold');
+        doc.setFont(font, 'bold');
         doc.setFontSize(12);
         doc.setTextColor(solde > 0 ? 217 : 0, solde > 0 ? 83 : 128, solde > 0 ? 79 : 0);
-        doc.text('Solde dû:', totauxX, y, { align: 'right' });
+        doc.text('Solde du:', totauxX, y, { align: 'right' });
         doc.text(this.formaterMontant(solde), totauxValX, y, { align: 'right' });
         doc.setTextColor(0, 0, 0);
 
@@ -244,9 +250,9 @@ const PdfFacture = {
         // ========== NOTES ==========
         if (facture.notes) {
             doc.setFontSize(9);
-            doc.setFont(undefined, 'bold');
+            doc.setFont(font, 'bold');
             doc.text('Notes:', margin, y);
-            doc.setFont(undefined, 'normal');
+            doc.setFont(font, 'normal');
             y += 4;
             const notesLines = doc.splitTextToSize(facture.notes, pageWidth - 2 * margin);
             doc.text(notesLines, margin, y);

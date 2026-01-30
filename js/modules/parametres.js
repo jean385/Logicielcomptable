@@ -777,58 +777,203 @@ const Parametres = {
     },
 
     /**
-     * Render configuration des taxes
+     * Render configuration des taxes avec codes de taxe multi-provinces
      */
     renderTaxes() {
         const taxes = Storage.get('taxes');
+        const codes = Storage.get('codes_taxe') || [];
+
+        let codesRows = '';
+        codes.forEach(c => {
+            codesRows += `
+                <tr>
+                    <td><strong>${App.escapeHtml(c.id)}</strong></td>
+                    <td>${App.escapeHtml(c.nom)}</td>
+                    <td>${c.taxe1Nom ? App.escapeHtml(c.taxe1Nom) + ' ' + c.taxe1Taux + '%' : '-'}</td>
+                    <td>${c.taxe2Nom ? App.escapeHtml(c.taxe2Nom) + ' ' + c.taxe2Taux + '%' : '-'}</td>
+                    <td class="text-center">${c.defaut ? '<span class="badge badge-success">Defaut</span>' : '<button class="btn btn-secondary" onclick="Parametres.definirCodeTaxeDefaut(\'' + App.escapeHtml(c.id) + '\')">Definir</button>'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-secondary" onclick="Parametres.modifierCodeTaxe('${App.escapeHtml(c.id)}')">Modifier</button>
+                        <button class="btn btn-danger" onclick="Parametres.supprimerCodeTaxe('${App.escapeHtml(c.id)}')">Suppr</button>
+                    </td>
+                </tr>
+            `;
+        });
 
         return `
             <div class="rapport-container">
                 <h3>Configuration des taxes</h3>
-                <form id="form-taxes" onsubmit="Parametres.sauvegarderTaxes(event)">
+
+                <form id="form-taxes" onsubmit="Parametres.sauvegarderTaxes(event)" style="margin-bottom: 24px;">
                     <div class="form-group">
                         <label>
                             <input type="checkbox" id="taxes-appliquer" ${taxes.appliquerTaxes ? 'checked' : ''}>
                             Appliquer les taxes automatiquement
                         </label>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>TPS (Taxe sur les produits et services) %</label>
-                            <input type="number" id="taxes-tps" value="${taxes.tps}" step="0.001" min="0" max="100">
-                        </div>
-                        <div class="form-group">
-                            <label>TVQ (Taxe de vente du Québec) %</label>
-                            <input type="number" id="taxes-tvq" value="${taxes.tvq}" step="0.001" min="0" max="100">
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <strong>Taux actuels au Québec:</strong><br>
-                        TPS: 5% (fédéral)<br>
-                        TVQ: 9.975% (provincial)
-                    </div>
-
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                 </form>
+
+                <h4 style="margin-bottom: 12px; color: var(--primary-color);">Codes de taxe</h4>
+                <div class="toolbar">
+                    <button class="btn btn-primary" onclick="Parametres.ajouterCodeTaxe()">+ Ajouter un code de taxe</button>
+                </div>
+                <div class="table-container">
+                    <table id="table-codes-taxe">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Nom</th>
+                                <th>Taxe 1</th>
+                                <th>Taxe 2</th>
+                                <th class="text-center">Defaut</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${codesRows || '<tr><td colspan="6" class="text-center">Aucun code de taxe</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info" style="margin-top: 16px;">
+                    <strong>Note:</strong> Le code de taxe par defaut est utilise quand aucun code specifique n'est selectionne sur un document.
+                    Les modules Soumissions et Bons de commande permettent de choisir le code de taxe par document.
+                </div>
             </div>
         `;
     },
 
     /**
-     * Sauvegarde la configuration des taxes
+     * Sauvegarde la configuration globale des taxes
      */
     sauvegarderTaxes(event) {
         event.preventDefault();
 
-        const taxes = {
-            appliquerTaxes: document.getElementById('taxes-appliquer').checked,
-            tps: parseFloat(document.getElementById('taxes-tps').value) || 0,
-            tvq: parseFloat(document.getElementById('taxes-tvq').value) || 0
-        };
+        const taxes = Storage.get('taxes') || {};
+        taxes.appliquerTaxes = document.getElementById('taxes-appliquer').checked;
 
         Storage.set('taxes', taxes);
-        App.notification('Configuration des taxes enregistrée', 'success');
+        App.notification('Configuration des taxes enregistree', 'success');
+    },
+
+    ajouterCodeTaxe() {
+        App.ouvrirModal('Ajouter un code de taxe', this._formCodeTaxe());
+    },
+
+    modifierCodeTaxe(id) {
+        const codes = Storage.get('codes_taxe') || [];
+        const code = codes.find(c => c.id === id);
+        if (!code) return;
+        App.ouvrirModal('Modifier le code de taxe', this._formCodeTaxe(code));
+    },
+
+    _formCodeTaxe(code) {
+        const isEdit = !!code;
+        return `
+            <form id="form-code-taxe" onsubmit="Parametres.sauvegarderCodeTaxe(event${isEdit ? ', \'' + App.escapeHtml(code.id) + '\'' : ''})">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Code (identifiant unique) *</label>
+                        <input type="text" id="ct-id" value="${code ? App.escapeHtml(code.id) : ''}" required ${isEdit ? 'readonly style="background: #eee;"' : ''}>
+                    </div>
+                    <div class="form-group">
+                        <label>Nom *</label>
+                        <input type="text" id="ct-nom" value="${code ? App.escapeHtml(code.nom) : ''}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Taxe 1 — Nom</label>
+                        <input type="text" id="ct-taxe1-nom" value="${code ? App.escapeHtml(code.taxe1Nom || '') : 'TPS'}" placeholder="TPS, TVH, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label>Taxe 1 — Taux (%)</label>
+                        <input type="number" id="ct-taxe1-taux" value="${code ? code.taxe1Taux : 5}" step="0.001" min="0" max="100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Taxe 2 — Nom</label>
+                        <input type="text" id="ct-taxe2-nom" value="${code ? App.escapeHtml(code.taxe2Nom || '') : ''}" placeholder="TVQ, TVP, etc. (laisser vide si aucune)">
+                    </div>
+                    <div class="form-group">
+                        <label>Taxe 2 — Taux (%)</label>
+                        <input type="number" id="ct-taxe2-taux" value="${code ? code.taxe2Taux : 0}" step="0.001" min="0" max="100">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">${isEdit ? 'Enregistrer' : 'Ajouter'}</button>
+                </div>
+            </form>
+        `;
+    },
+
+    sauvegarderCodeTaxe(event, existingId) {
+        event.preventDefault();
+
+        const codes = Storage.get('codes_taxe') || [];
+        const id = existingId || document.getElementById('ct-id').value.trim().toUpperCase();
+        const nom = document.getElementById('ct-nom').value.trim();
+        const taxe1Nom = document.getElementById('ct-taxe1-nom').value.trim();
+        const taxe1Taux = parseFloat(document.getElementById('ct-taxe1-taux').value) || 0;
+        const taxe2Nom = document.getElementById('ct-taxe2-nom').value.trim();
+        const taxe2Taux = parseFloat(document.getElementById('ct-taxe2-taux').value) || 0;
+
+        if (!id || !nom) {
+            App.notification('Le code et le nom sont requis', 'warning');
+            return;
+        }
+
+        if (existingId) {
+            const index = codes.findIndex(c => c.id === existingId);
+            if (index !== -1) {
+                codes[index].nom = nom;
+                codes[index].taxe1Nom = taxe1Nom;
+                codes[index].taxe1Taux = taxe1Taux;
+                codes[index].taxe2Nom = taxe2Nom;
+                codes[index].taxe2Taux = taxe2Taux;
+            }
+        } else {
+            if (codes.find(c => c.id === id)) {
+                App.notification('Ce code existe deja', 'warning');
+                return;
+            }
+            codes.push({ id, nom, taxe1Nom, taxe1Taux, taxe2Nom, taxe2Taux, defaut: codes.length === 0 });
+        }
+
+        Storage.set('codes_taxe', codes);
+        App.fermerModal();
+        App.notification('Code de taxe enregistre', 'success');
+        document.getElementById('tab-taxes').innerHTML = this.renderTaxes();
+    },
+
+    supprimerCodeTaxe(id) {
+        if (!confirm('Supprimer le code de taxe "' + id + '"?')) return;
+        let codes = Storage.get('codes_taxe') || [];
+        codes = codes.filter(c => c.id !== id);
+        Storage.set('codes_taxe', codes);
+        App.notification('Code de taxe supprime', 'success');
+        document.getElementById('tab-taxes').innerHTML = this.renderTaxes();
+    },
+
+    definirCodeTaxeDefaut(id) {
+        const codes = Storage.get('codes_taxe') || [];
+        codes.forEach(c => { c.defaut = (c.id === id); });
+        Storage.set('codes_taxe', codes);
+
+        // Synchroniser avec les taxes globales
+        const code = codes.find(c => c.id === id);
+        if (code) {
+            const taxes = Storage.get('taxes') || {};
+            taxes.tps = code.taxe1Taux;
+            taxes.tvq = code.taxe2Taux;
+            Storage.set('taxes', taxes);
+        }
+
+        App.notification('Code de taxe par defaut mis a jour', 'success');
+        document.getElementById('tab-taxes').innerHTML = this.renderTaxes();
     },
 
     /**

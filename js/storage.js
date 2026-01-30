@@ -437,6 +437,16 @@ const Storage = {
         if (!this.get('amortissements')) this.set('amortissements', []);
         if (!this.get('produits')) this.set('produits', []);
         if (!this.get('activites_recentes')) this.set('activites_recentes', []);
+
+        // Collections pour soumissions, bons de commande, employes, paie
+        if (!this.get('documents_commerciaux')) this.set('documents_commerciaux', []);
+        if (!this.get('employes')) this.set('employes', []);
+        if (!this.get('talons_paie')) this.set('talons_paie', []);
+
+        // Codes de taxe multi-provinces
+        if (!this.get('codes_taxe')) {
+            this.set('codes_taxe', this.getCodesTaxeDefaut());
+        }
     },
 
     /**
@@ -595,6 +605,36 @@ const Storage = {
         ];
     },
 
+    /**
+     * Retourne les codes de taxe canadiens par defaut
+     */
+    getCodesTaxeDefaut() {
+        return [
+            { id: 'QC', nom: 'Quebec (TPS+TVQ)', taxe1Nom: 'TPS', taxe1Taux: 5.0, taxe2Nom: 'TVQ', taxe2Taux: 9.975, defaut: true },
+            { id: 'ON', nom: 'Ontario (TVH)', taxe1Nom: 'TVH', taxe1Taux: 13.0, taxe2Nom: '', taxe2Taux: 0, defaut: false },
+            { id: 'AB', nom: 'Alberta (TPS)', taxe1Nom: 'TPS', taxe1Taux: 5.0, taxe2Nom: '', taxe2Taux: 0, defaut: false },
+            { id: 'BC', nom: 'C.-B. (TPS+TVP)', taxe1Nom: 'TPS', taxe1Taux: 5.0, taxe2Nom: 'TVP', taxe2Taux: 7.0, defaut: false },
+            { id: 'SK', nom: 'Saskatchewan (TPS+TVP)', taxe1Nom: 'TPS', taxe1Taux: 5.0, taxe2Nom: 'TVP', taxe2Taux: 6.0, defaut: false },
+            { id: 'MB', nom: 'Manitoba (TPS+TVP)', taxe1Nom: 'TPS', taxe1Taux: 5.0, taxe2Nom: 'TVP', taxe2Taux: 7.0, defaut: false },
+            { id: 'ATL', nom: 'Atlantique (TVH 15%)', taxe1Nom: 'TVH', taxe1Taux: 15.0, taxe2Nom: '', taxe2Taux: 0, defaut: false },
+            { id: 'EXO', nom: 'Exonere (0%)', taxe1Nom: '', taxe1Taux: 0, taxe2Nom: '', taxe2Taux: 0, defaut: false }
+        ];
+    },
+
+    /**
+     * Retourne les taux de taxe pour un code de taxe donne
+     */
+    getTaxesParCode(codeId) {
+        const codes = this.get('codes_taxe') || [];
+        const code = codes.find(c => c.id === codeId);
+        if (code) {
+            return { taxe1Nom: code.taxe1Nom, taxe1Taux: code.taxe1Taux, taxe2Nom: code.taxe2Nom, taxe2Taux: code.taxe2Taux };
+        }
+        // Fallback sur les taxes par defaut
+        const taxes = this.get('taxes');
+        return { taxe1Nom: 'TPS', taxe1Taux: taxes ? taxes.tps : 5, taxe2Nom: 'TVQ', taxe2Taux: taxes ? taxes.tvq : 9.975 };
+    },
+
     // ========== EXPORT / IMPORT ==========
 
     /**
@@ -631,6 +671,12 @@ const Storage = {
             donnees.amortissements = this.get('amortissements');
         }
 
+        // Collections communes (soumissions, bons de commande, employes, paie, codes taxe)
+        donnees.documents_commerciaux = this.get('documents_commerciaux');
+        donnees.employes = this.get('employes');
+        donnees.talons_paie = this.get('talons_paie');
+        donnees.codes_taxe = this.get('codes_taxe');
+
         return JSON.stringify(donnees, null, 2);
     },
 
@@ -664,6 +710,13 @@ const Storage = {
             if (donnees.projets) this.set('projets', donnees.projets);
             if (donnees.immobilisations) this.set('immobilisations', donnees.immobilisations);
             if (donnees.amortissements) this.set('amortissements', donnees.amortissements);
+
+            // Collections communes (soumissions, bons de commande, employes, paie, codes taxe)
+            if (donnees.documents_commerciaux) this.set('documents_commerciaux', donnees.documents_commerciaux);
+            if (donnees.employes) this.set('employes', donnees.employes);
+            if (donnees.talons_paie) this.set('talons_paie', donnees.talons_paie);
+            if (donnees.codes_taxe) this.set('codes_taxe', donnees.codes_taxe);
+
             return true;
         } catch (e) {
             console.error('Erreur d\'importation:', e);

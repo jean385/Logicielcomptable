@@ -199,7 +199,6 @@ body {
 .main-content {
     flex: 1;
     padding: 20px;
-    max-width: 1200px;
     background: var(--background-color);
     min-height: calc(100vh - 41px);
 }
@@ -1742,6 +1741,34 @@ tr:hover {
     grid-template-columns: repeat(3, 1fr) !important;
 }
 
+/* ========== DASHBOARD FLOW ROWS (Flux fleche style Sage 50) ========== */
+
+.dashboard-flow-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+.dashboard-flow-row .dashboard-task-btn { flex: 1; min-width: 0; }
+.dashboard-flow-arrow {
+    font-size: 20px;
+    color: var(--accent-color);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Graphique, stats, echeances dashboard */
+.dashboard-chart-container { background: var(--card-background); padding: 16px; border-radius: 4px; border: 1px solid var(--border-color); box-shadow: var(--shadow); margin-top: 20px; }
+.dashboard-chart-container canvas { width: 100% !important; max-height: 220px; }
+.dashboard-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+.stat-card { background: var(--card-background); padding: 12px; border-radius: 4px; border: 1px solid var(--border-color); text-align: center; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--primary-color); }
+.stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; margin-top: 4px; }
+.dash-echeances-liste { background: var(--card-background); border-radius: 4px; border: 1px solid var(--border-color); margin-top: 20px; }
+.dash-echeance-item { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--gray-light); font-size: 12px; }
+.dash-echeance-item:last-child { border-bottom: none; }
+.dash-echeance-urgent { color: var(--danger-color); font-weight: 600; }
+
 /* ========== CATÉGORIES (Paramètres autonome) ========== */
 
 .categories-list {
@@ -1930,6 +1957,9 @@ tr:hover {
     .autonome-quick-actions {
         flex-direction: column;
     }
+
+    .dashboard-flow-arrow { display: none; }
+    .dashboard-flow-row { flex-wrap: wrap; }
 
     .form-row,
     .form-row-3 {

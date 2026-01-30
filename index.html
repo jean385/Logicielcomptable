@@ -277,50 +277,54 @@
 
             <!-- Contenu principal -->
             <main class="main-content">
-            <!-- Écran d'accueil — Dashboard 2 colonnes -->
+            <!-- Écran d'accueil — Dashboard pleine largeur avec flux fléché -->
             <div id="accueil" class="page active">
                 <h1>Tableau de Bord</h1>
                 <div class="dashboard-layout">
-                    <!-- Colonne gauche : Raccourcis tâches -->
+                    <!-- Colonne gauche : Flux fléché style Sage 50 -->
                     <div class="dashboard-col-left">
-                        <h3 class="dashboard-section-title">Tâches rapides</h3>
-                        <div class="dashboard-tasks-grid">
+                        <h3 class="dashboard-section-title">Flux de travail</h3>
+
+                        <!-- Rang 1 : Ventes -->
+                        <div class="dashboard-flow-row">
                             <button class="dashboard-task-btn" onclick="Ventes.afficher()" title="Clients">
                                 <div class="dashboard-task-icon">
                                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 </div>
                                 <span class="dashboard-task-label">Clients</span>
                             </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
+                            <button class="dashboard-task-btn" onclick="Soumissions.afficher()" title="Soumissions">
+                                <div class="dashboard-task-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+                                </div>
+                                <span class="dashboard-task-label">Soumissions</span>
+                            </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
+                            <button class="dashboard-task-btn" onclick="BonsCommande.afficher()" title="Bons de commande">
+                                <div class="dashboard-task-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                </div>
+                                <span class="dashboard-task-label">Bons de commande</span>
+                            </button>
+                        </div>
+
+                        <!-- Rang 2 : Achats -->
+                        <div class="dashboard-flow-row">
                             <button class="dashboard-task-btn" onclick="Achats.afficher()" title="Fournisseurs">
                                 <div class="dashboard-task-icon">
                                     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                                 </div>
                                 <span class="dashboard-task-label">Fournisseurs</span>
                             </button>
-                            <button class="dashboard-task-btn" onclick="Ventes.afficher()" title="Factures vente">
-                                <div class="dashboard-task-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
-                                </div>
-                                <span class="dashboard-task-label">Factures vente</span>
-                            </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
                             <button class="dashboard-task-btn" onclick="Achats.afficher()" title="Factures achat">
                                 <div class="dashboard-task-icon">
                                     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg>
                                 </div>
                                 <span class="dashboard-task-label">Factures achat</span>
                             </button>
-                            <button class="dashboard-task-btn" onclick="General.afficher()" title="Écritures">
-                                <div class="dashboard-task-icon">
-                                    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                </div>
-                                <span class="dashboard-task-label">Écritures</span>
-                            </button>
-                            <button class="dashboard-task-btn" onclick="Encaissements.afficher()" title="Encaissements">
-                                <div class="dashboard-task-icon">
-                                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                                </div>
-                                <span class="dashboard-task-label">Encaissements</span>
-                            </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
                             <button class="dashboard-task-btn" onclick="Paiements.afficher()" title="Paiements">
                                 <div class="dashboard-task-icon">
                                     <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/><polyline points="7 3 4 6 7 9" stroke-width="1.5"/></svg>
@@ -328,9 +332,33 @@
                                 <span class="dashboard-task-label">Paiements</span>
                             </button>
                         </div>
+
+                        <!-- Rang 3 : Comptabilité -->
+                        <div class="dashboard-flow-row">
+                            <button class="dashboard-task-btn" onclick="Ventes.afficher()" title="Factures vente">
+                                <div class="dashboard-task-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                                </div>
+                                <span class="dashboard-task-label">Factures vente</span>
+                            </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
+                            <button class="dashboard-task-btn" onclick="Encaissements.afficher()" title="Encaissements">
+                                <div class="dashboard-task-icon">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </div>
+                                <span class="dashboard-task-label">Encaissements</span>
+                            </button>
+                            <span class="dashboard-flow-arrow">&rarr;</span>
+                            <button class="dashboard-task-btn" onclick="General.afficher()" title="Écritures">
+                                <div class="dashboard-task-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </div>
+                                <span class="dashboard-task-label">Écritures</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Colonne droite : Résumé financier + Activités -->
+                    <!-- Colonne droite : Résumé financier + Activités + Graphique + Stats + Échéances -->
                     <div class="dashboard-col-right">
                         <h3 class="dashboard-section-title">Résumé financier</h3>
                         <div class="dashboard-summary">
@@ -357,6 +385,40 @@
                             <h3 class="dashboard-section-title">Activités récentes</h3>
                             <div id="activites-recentes-liste" class="activites-recentes-liste"></div>
                         </div>
+
+                        <!-- Graphique Revenus vs Dépenses -->
+                        <div class="dashboard-chart-container">
+                            <h3 class="dashboard-section-title" style="border-bottom: none; margin-bottom: 8px;">Revenus vs Dépenses (6 derniers mois)</h3>
+                            <canvas id="dash-chart-revenus-depenses"></canvas>
+                        </div>
+
+                        <!-- Stats rapides -->
+                        <div class="dashboard-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="dash-stat-factures-impayees">0</div>
+                                <div class="stat-label">Factures impayées</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="dash-stat-clients-actifs">0</div>
+                                <div class="stat-label">Clients actifs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="dash-stat-fournisseurs">0</div>
+                                <div class="stat-label">Fournisseurs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="dash-stat-ecritures-mois">0</div>
+                                <div class="stat-label">Écritures ce mois</div>
+                            </div>
+                        </div>
+
+                        <!-- Échéances prochaines -->
+                        <div style="margin-top: 20px;">
+                            <h3 class="dashboard-section-title">Échéances prochaines</h3>
+                            <div class="dash-echeances-liste" id="dash-echeances-liste">
+                                <div class="dash-echeance-item" style="color: var(--text-light);">Aucune échéance</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,6 +432,9 @@
             <div id="module-ventes" class="page"></div>
             <div id="module-rapports" class="page"></div>
             <div id="module-immobilisations" class="page"></div>
+            <div id="module-soumissions" class="page"></div>
+            <div id="module-bons-commande" class="page"></div>
+            <div id="module-paie" class="page"></div>
 
             <!-- Pages mode autonome -->
             <div id="accueil-autonome" class="page"></div>
@@ -463,6 +528,9 @@
     <script src="js/models/revenu-depense.js"></script>
     <script src="js/models/facture-simple.js"></script>
     <script src="js/models/produit.js"></script>
+    <script src="js/models/document-commercial.js"></script>
+    <script src="js/models/employe.js"></script>
+    <script src="js/models/paie.js"></script>
     <script src="js/modules/parametres.js"></script>
     <script src="js/modules/general.js"></script>
     <script src="js/modules/ventes.js"></script>
@@ -473,6 +541,9 @@
     <script src="js/modules/pdf-facture.js"></script>
     <script src="js/modules/email-facture.js"></script>
     <script src="js/modules/immobilisations.js"></script>
+    <script src="js/modules/soumissions.js"></script>
+    <script src="js/modules/bons-commande.js"></script>
+    <script src="js/modules/paie-module.js"></script>
     <script src="js/modules/autonome-dashboard.js"></script>
     <script src="js/modules/autonome-revenus.js"></script>
     <script src="js/modules/autonome-depenses.js"></script>

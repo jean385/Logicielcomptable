@@ -582,6 +582,14 @@ const App = {
                     <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg></span>
                     Ventes
                 </div>
+                <div class="sidebar-item" data-page="module-soumissions" onclick="Soumissions.afficher()">
+                    <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg></span>
+                    Soumissions
+                </div>
+                <div class="sidebar-item" data-page="module-bons-commande" onclick="BonsCommande.afficher()">
+                    <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+                    Bons de commande
+                </div>
                 <div class="sidebar-item" data-page="module-achats" onclick="Achats.afficher()">
                     <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><polyline points="9 15 12 18 15 15"/></svg></span>
                     Achats
@@ -600,6 +608,12 @@ const App = {
                     <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 23 4 23 16 16 12 16 8"/></svg></span>
                     Immobilisations
                 </div>
+                <div class="sidebar-separator"></div>
+                <div class="sidebar-item" data-page="module-paie" onclick="PaieModule.afficher()">
+                    <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+                    Employes & Paie
+                </div>
+                <div class="sidebar-separator"></div>
                 <div class="sidebar-item" data-page="module-parametres" onclick="Parametres.afficher()">
                     <span class="sidebar-item-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
                     Paramètres
@@ -1001,6 +1015,133 @@ const App = {
         const compteVentes = Compte.getByNumero('4000');
         document.getElementById('dash-revenus').textContent =
             Transaction.formaterMontant(compteVentes ? compteVentes.solde : 0);
+
+        // Stats rapides
+        this._renderDashboardStats();
+
+        // Graphique revenus vs depenses
+        this._renderChartRevDep();
+
+        // Echeances prochaines
+        this._renderEcheances();
+    },
+
+    _renderDashboardStats() {
+        try {
+            const factures = (typeof Facture !== 'undefined') ? Facture.getAll() : [];
+            const impayees = factures.filter(f => f.statut !== 'payee' && f.statut !== 'annulee');
+            const clients = (typeof Client !== 'undefined') ? Client.getAll() : [];
+            const fournisseurs = Storage.get('fournisseurs') || [];
+            const transactions = Storage.get('transactions') || [];
+            const now = new Date();
+            const moisCourant = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const ecrituresMois = transactions.filter(t => t.date && t.date.startsWith(moisCourant));
+
+            const elImpayees = document.getElementById('dash-stat-factures-impayees');
+            const elClients = document.getElementById('dash-stat-clients-actifs');
+            const elFournisseurs = document.getElementById('dash-stat-fournisseurs');
+            const elEcritures = document.getElementById('dash-stat-ecritures-mois');
+
+            if (elImpayees) elImpayees.textContent = impayees.length;
+            if (elClients) elClients.textContent = clients.length;
+            if (elFournisseurs) elFournisseurs.textContent = fournisseurs.length;
+            if (elEcritures) elEcritures.textContent = ecrituresMois.length;
+        } catch (e) {
+            console.error('Erreur stats dashboard:', e);
+        }
+    },
+
+    _dashChart: null,
+
+    _renderChartRevDep() {
+        try {
+            const canvas = document.getElementById('dash-chart-revenus-depenses');
+            if (!canvas) return;
+            if (typeof Chart === 'undefined') return;
+
+            const transactions = Storage.get('transactions') || [];
+            const now = new Date();
+            const labels = [];
+            const revenus = [];
+            const depenses = [];
+            const moisNoms = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                labels.push(moisNoms[d.getMonth()] + ' ' + d.getFullYear());
+
+                let rev = 0, dep = 0;
+                transactions.forEach(t => {
+                    if (t.date && t.date.startsWith(key)) {
+                        (t.lignes || []).forEach(l => {
+                            const comptes = Storage.get('comptes') || [];
+                            const compte = comptes.find(c => c.numero === l.compte);
+                            if (compte) {
+                                if (compte.type === 'revenus') {
+                                    rev += (l.credit || 0) - (l.debit || 0);
+                                } else if (compte.type === 'depenses') {
+                                    dep += (l.debit || 0) - (l.credit || 0);
+                                }
+                            }
+                        });
+                    }
+                });
+                revenus.push(Math.round(rev * 100) / 100);
+                depenses.push(Math.round(dep * 100) / 100);
+            }
+
+            if (this._dashChart) {
+                this._dashChart.destroy();
+            }
+
+            this._dashChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Revenus', data: revenus, backgroundColor: 'rgba(92, 184, 92, 0.7)', borderColor: '#5cb85c', borderWidth: 1 },
+                        { label: 'Depenses', data: depenses, backgroundColor: 'rgba(217, 83, 79, 0.7)', borderColor: '#d9534f', borderWidth: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        } catch (e) {
+            console.error('Erreur chart dashboard:', e);
+        }
+    },
+
+    _renderEcheances() {
+        try {
+            const container = document.getElementById('dash-echeances-liste');
+            if (!container) return;
+
+            const factures = (typeof Facture !== 'undefined') ? Facture.getAll() : [];
+            const impayees = factures.filter(f => f.statut !== 'payee' && f.statut !== 'annulee' && f.echeance);
+            impayees.sort((a, b) => (a.echeance || '').localeCompare(b.echeance || ''));
+            const top5 = impayees.slice(0, 5);
+
+            if (top5.length === 0) {
+                container.innerHTML = '<div class="dash-echeance-item" style="color: var(--text-light);">Aucune echeance</div>';
+                return;
+            }
+
+            const aujourdhui = Storage.aujourdhui();
+            container.innerHTML = top5.map(f => {
+                const urgent = f.echeance <= aujourdhui;
+                return '<div class="dash-echeance-item' + (urgent ? ' dash-echeance-urgent' : '') + '">' +
+                    '<span>' + (f.numero || '-') + ' — ' + (f.clientNom || '') + '</span>' +
+                    '<span>' + f.echeance + ' | ' + Transaction.formaterMontant(f.total || 0) + '</span>' +
+                    '</div>';
+            }).join('');
+        } catch (e) {
+            console.error('Erreur echeances dashboard:', e);
+        }
     },
 
     /**

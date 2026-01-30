@@ -192,6 +192,11 @@
                         <span class="module-name">Encaissements</span>
                         <span class="module-desc">Réception paiements clients</span>
                     </button>
+                    <button class="module-btn" onclick="Immobilisations.afficher()">
+                        <span class="module-icon">🏗️</span>
+                        <span class="module-name">Immobilisations</span>
+                        <span class="module-desc">Amortissement des actifs</span>
+                    </button>
                 </div>
 
                 <!-- Résumé rapide -->
@@ -223,6 +228,7 @@
             <div id="module-encaissements" class="page"></div>
             <div id="module-ventes" class="page"></div>
             <div id="module-rapports" class="page"></div>
+            <div id="module-immobilisations" class="page"></div>
         </main>
     </div>
 
@@ -282,6 +288,7 @@
     <script src="js/models/fournisseur.js"></script>
     <script src="js/models/facture.js"></script>
     <script src="js/models/projet.js"></script>
+    <script src="js/models/immobilisation.js"></script>
     <script src="js/modules/parametres.js"></script>
     <script src="js/modules/general.js"></script>
     <script src="js/modules/ventes.js"></script>
@@ -291,6 +298,7 @@
     <script src="js/modules/rapports.js"></script>
     <script src="js/modules/pdf-facture.js"></script>
     <script src="js/modules/email-facture.js"></script>
+    <script src="js/modules/immobilisations.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -251,6 +251,8 @@ const Storage = {
         if (!this.get('fournisseurs')) this.set('fournisseurs', []);
         if (!this.get('factures')) this.set('factures', []);
         if (!this.get('projets')) this.set('projets', []);
+        if (!this.get('immobilisations')) this.set('immobilisations', []);
+        if (!this.get('amortissements')) this.set('amortissements', []);
     },
 
     /**
@@ -266,8 +268,16 @@ const Storage = {
             { numero: '1160', nom: 'TVQ à recevoir', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
             { numero: '1200', nom: 'Stock de marchandises', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
             { numero: '1300', nom: 'Frais payés d\'avance', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
-            { numero: '1500', nom: 'Équipement', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
-            { numero: '1510', nom: 'Amortissement cumulé - Équipement', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
+            { numero: '1500', nom: 'Mobilier et agencements', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
+            { numero: '1510', nom: 'Amortissement cumulé - Mobilier et agencements', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
+            { numero: '1520', nom: 'Équipement informatique', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
+            { numero: '1530', nom: 'Amortissement cumulé - Équipement informatique', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
+            { numero: '1540', nom: 'Améliorations locatives', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
+            { numero: '1550', nom: 'Amortissement cumulé - Améliorations locatives', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
+            { numero: '1560', nom: 'Outillage', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
+            { numero: '1570', nom: 'Amortissement cumulé - Outillage', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
+            { numero: '1580', nom: 'Matériel roulant', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
+            { numero: '1590', nom: 'Amortissement cumulé - Matériel roulant', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
             { numero: '1600', nom: 'Véhicules', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
             { numero: '1610', nom: 'Amortissement cumulé - Véhicules', type: 'actif', soldeNormal: 'credit', solde: 0, actif: true },
             { numero: '1700', nom: 'Bâtiments', type: 'actif', soldeNormal: 'debit', solde: 0, actif: true },
@@ -336,6 +346,8 @@ const Storage = {
             fournisseurs: this.get('fournisseurs'),
             factures: this.get('factures'),
             projets: this.get('projets'),
+            immobilisations: this.get('immobilisations'),
+            amortissements: this.get('amortissements'),
             logo: this.get('logo')
         };
         return JSON.stringify(donnees, null, 2);
@@ -356,6 +368,8 @@ const Storage = {
             if (donnees.fournisseurs) this.set('fournisseurs', donnees.fournisseurs);
             if (donnees.factures) this.set('factures', donnees.factures);
             if (donnees.projets) this.set('projets', donnees.projets);
+            if (donnees.immobilisations) this.set('immobilisations', donnees.immobilisations);
+            if (donnees.amortissements) this.set('amortissements', donnees.amortissements);
             if (donnees.logo) this.set('logo', donnees.logo);
             return true;
         } catch (e) {

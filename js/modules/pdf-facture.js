@@ -187,7 +187,7 @@ const PdfFacture = {
             columnStyles: {
                 num: { cellWidth: 12, halign: 'center' },
                 description: { cellWidth: 'auto' },
-                quantite: { cellWidth: 20, halign: 'center' },
+                quantite: { cellWidth: 20, halign: 'right' },
                 prixUnitaire: { cellWidth: 35, halign: 'right' },
                 montant: { cellWidth: 35, halign: 'right' }
             }

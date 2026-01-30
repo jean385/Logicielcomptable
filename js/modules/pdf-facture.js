@@ -92,7 +92,7 @@ const PdfFacture = {
         doc.setDrawColor(30, 58, 95);
         doc.setLineWidth(0.5);
         doc.line(margin, y, pageWidth - margin, y);
-        y += 8;
+        y += 12;
 
         // ========== BLOC FACTURE ==========
         doc.setFontSize(20);
@@ -106,15 +106,15 @@ const PdfFacture = {
 
         const factureInfoX = pageWidth - margin - 60;
         doc.setFont(font, 'bold');
-        doc.text('Numero:', factureInfoX, y - 8);
-        doc.text('Date:', factureInfoX, y - 3);
-        doc.text('Echeance:', factureInfoX, y + 2);
+        doc.text('Numero:', factureInfoX, y - 5);
+        doc.text('Date:', factureInfoX, y);
+        doc.text('Echeance:', factureInfoX, y + 5);
         doc.setFont(font, 'normal');
-        doc.text(facture.numero, factureInfoX + 30, y - 8);
-        doc.text(facture.date, factureInfoX + 30, y - 3);
-        doc.text(facture.echeance || '-', factureInfoX + 30, y + 2);
+        doc.text(facture.numero, factureInfoX + 30, y - 5);
+        doc.text(facture.date, factureInfoX + 30, y);
+        doc.text(facture.echeance || '-', factureInfoX + 30, y + 5);
 
-        y += 10;
+        y += 12;
 
         // ========== BLOC CLIENT ==========
         doc.setFontSize(10);

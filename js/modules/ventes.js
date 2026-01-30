@@ -13,10 +13,8 @@ const Ventes = {
         const container = document.getElementById('module-ventes');
         container.innerHTML = `
             <div class="module-header">
+                <button class="btn-retour" onclick="App.retourAccueil()">← Tableau de bord</button>
                 <h1>Ventes</h1>
-                <button class="btn-retour" onclick="App.retourAccueil()">
-                    ← Retour
-                </button>
             </div>
 
             <div class="tabs">

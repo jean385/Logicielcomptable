@@ -53,8 +53,8 @@ const AutonomeDepenses = {
 
         container.innerHTML = `
             <div class="module-header">
+                <button class="btn-retour" onclick="AutonomeDashboard.afficher()">← Tableau de bord</button>
                 <h1>Dépenses</h1>
-                <button class="btn-retour" onclick="AutonomeDashboard.afficher()">← Retour</button>
             </div>
 
             <div class="toolbar">

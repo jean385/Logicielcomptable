@@ -236,9 +236,9 @@ body {
 /* En-tête de module */
 .module-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    gap: 12px;
 }
 
 .module-header h1 {
@@ -254,17 +254,21 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
-    background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
-    border: 1px solid var(--border-color);
-    border-radius: 3px;
+    padding: 8px 14px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+    white-space: nowrap;
+    order: -1;
 }
 
 .btn-retour:hover {
-    background: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+    background: var(--primary-dark);
 }
 
 /* Boutons */

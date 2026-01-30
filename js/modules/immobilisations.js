@@ -16,10 +16,8 @@ const Immobilisations = {
         const container = document.getElementById('module-immobilisations');
         container.innerHTML = `
             <div class="module-header">
+                <button class="btn-retour" onclick="App.retourAccueil()">← Tableau de bord</button>
                 <h1>Immobilisations</h1>
-                <button class="btn-retour" onclick="App.retourAccueil()">
-                    ← Retour
-                </button>
             </div>
 
             <div class="tabs">

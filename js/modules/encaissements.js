@@ -13,10 +13,8 @@ const Encaissements = {
         const container = document.getElementById('module-encaissements');
         container.innerHTML = `
             <div class="module-header">
+                <button class="btn-retour" onclick="App.retourAccueil()">← Tableau de bord</button>
                 <h1>Encaissements</h1>
-                <button class="btn-retour" onclick="App.retourAccueil()">
-                    ← Retour
-                </button>
             </div>
 
             <div class="tabs">

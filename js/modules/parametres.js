@@ -16,10 +16,8 @@ const Parametres = {
         if (mode === 'autonome') {
             container.innerHTML = `
                 <div class="module-header">
+                    <button class="btn-retour" onclick="App.retourAccueil()">← Tableau de bord</button>
                     <h1>Paramètres</h1>
-                    <button class="btn-retour" onclick="App.retourAccueil()">
-                        ← Retour
-                    </button>
                 </div>
 
                 <div class="tabs">
@@ -59,10 +57,8 @@ const Parametres = {
         } else {
             container.innerHTML = `
                 <div class="module-header">
+                    <button class="btn-retour" onclick="App.retourAccueil()">← Tableau de bord</button>
                     <h1>Paramètres</h1>
-                    <button class="btn-retour" onclick="App.retourAccueil()">
-                        ← Retour
-                    </button>
                 </div>
 
                 <div class="tabs">

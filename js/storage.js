@@ -435,6 +435,7 @@ const Storage = {
         if (!this.get('projets')) this.set('projets', []);
         if (!this.get('immobilisations')) this.set('immobilisations', []);
         if (!this.get('amortissements')) this.set('amortissements', []);
+        if (!this.get('produits')) this.set('produits', []);
     },
 
     /**
@@ -516,6 +517,7 @@ const Storage = {
         if (!this.get('depenses')) this.set('depenses', []);
         if (!this.get('factures_simples')) this.set('factures_simples', []);
         if (!this.get('clients_frequents')) this.set('clients_frequents', []);
+        if (!this.get('produits')) this.set('produits', []);
     },
 
     /**
@@ -605,7 +607,8 @@ const Storage = {
             entreprise: this.get('entreprise'),
             taxes: this.get('taxes'),
             exercice: this.get('exercice'),
-            logo: this.get('logo')
+            logo: this.get('logo'),
+            produits: this.get('produits')
         };
 
         if (mode === 'autonome') {
@@ -640,6 +643,7 @@ const Storage = {
             if (donnees.taxes) this.set('taxes', donnees.taxes);
             if (donnees.exercice) this.set('exercice', donnees.exercice);
             if (donnees.logo) this.set('logo', donnees.logo);
+            if (donnees.produits) this.set('produits', donnees.produits);
 
             // Données mode autonome
             if (donnees.categories_revenus) this.set('categories_revenus', donnees.categories_revenus);

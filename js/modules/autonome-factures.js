@@ -145,6 +145,12 @@ const AutonomeFactures = {
                     <h4>Lignes de facture</h4>
                     <div id="fs-lignes">
                         <div class="fs-ligne" data-index="0">
+                            <div class="form-group" style="margin-bottom: 4px;">
+                                <label>Produit</label>
+                                <select name="fs-ligne-produit-0" onchange="AutonomeFactures.selectionnerProduit(0)">
+                                    ${Produit.genererOptions()}
+                                </select>
+                            </div>
                             <div class="form-row" style="grid-template-columns: 3fr 1fr 1fr 1fr auto;">
                                 <div class="form-group">
                                     <label>Description</label>
@@ -206,6 +212,11 @@ const AutonomeFactures = {
         div.className = 'fs-ligne';
         div.dataset.index = idx;
         div.innerHTML = `
+            <div class="form-group" style="margin-bottom: 4px;">
+                <select name="fs-ligne-produit-${idx}" onchange="AutonomeFactures.selectionnerProduit(${idx})">
+                    ${Produit.genererOptions()}
+                </select>
+            </div>
             <div class="form-row" style="grid-template-columns: 3fr 1fr 1fr 1fr auto;">
                 <div class="form-group">
                     <input type="text" name="fs-ligne-desc-${idx}" required>
@@ -245,6 +256,22 @@ const AutonomeFactures = {
             montantField.value = (qte * prix).toFixed(2) + ' $';
         }
         this.calculerTotaux();
+    },
+
+    selectionnerProduit(idx) {
+        const select = document.querySelector(`[name="fs-ligne-produit-${idx}"]`);
+        if (!select || !select.value) return;
+
+        const produit = Produit.getById(select.value);
+        if (!produit) return;
+
+        const descField = document.querySelector(`[name="fs-ligne-desc-${idx}"]`);
+        const prixField = document.querySelector(`[name="fs-ligne-prix-${idx}"]`);
+
+        if (descField) descField.value = produit.description || produit.nom;
+        if (prixField) prixField.value = produit.prixUnitaire;
+
+        this.calculerLigne(idx);
     },
 
     calculerTotaux() {
@@ -403,6 +430,12 @@ const AutonomeFactures = {
         (f.lignes || []).forEach((l, idx) => {
             lignesHTML += `
                 <div class="fs-ligne" data-index="${idx}">
+                    <div class="form-group" style="margin-bottom: 4px;">
+                        ${idx === 0 ? '<label>Produit</label>' : ''}
+                        <select name="fs-ligne-produit-${idx}" onchange="AutonomeFactures.selectionnerProduit(${idx})">
+                            ${Produit.genererOptions()}
+                        </select>
+                    </div>
                     <div class="form-row" style="grid-template-columns: 3fr 1fr 1fr 1fr auto;">
                         <div class="form-group">
                             ${idx === 0 ? '<label>Description</label>' : ''}

@@ -1036,6 +1036,25 @@ const Ventes = {
     },
 
     /**
+     * Remplit la description et le prix quand un produit est sélectionné
+     */
+    selectionnerProduit(index) {
+        const select = document.getElementById(`ligne-produit-${index}`);
+        if (!select || !select.value) return;
+
+        const produit = Produit.getById(select.value);
+        if (!produit) return;
+
+        const descField = document.getElementById(`ligne-desc-${index}`);
+        const prixField = document.getElementById(`ligne-prix-${index}`);
+
+        if (descField) descField.value = produit.description || produit.nom;
+        if (prixField) prixField.value = produit.prixUnitaire;
+
+        this.calculerTotauxFacture();
+    },
+
+    /**
      * Ajoute une ligne de facture
      */
     ajouterLigneFacture() {
@@ -1044,8 +1063,11 @@ const Ventes = {
 
         const ligne = document.createElement('div');
         ligne.className = 'ligne-ecriture';
-        ligne.style.gridTemplateColumns = '2fr 80px 120px 120px auto';
+        ligne.style.gridTemplateColumns = '1fr 2fr 80px 120px 120px auto';
         ligne.innerHTML = `
+            <select id="ligne-produit-${index}" onchange="Ventes.selectionnerProduit(${index})">
+                ${Produit.genererOptions()}
+            </select>
             <input type="text" id="ligne-desc-${index}" placeholder="Description">
             <input type="number" id="ligne-qte-${index}" placeholder="Qté" value="1" min="1" step="1"
                 onchange="Ventes.calculerTotauxFacture()" oninput="Ventes.calculerTotauxFacture()">

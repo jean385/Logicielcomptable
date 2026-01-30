@@ -24,6 +24,7 @@ const Parametres = {
                     <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('categories')">Catégories</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('produits')">Produits</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('abonnement')">Abonnement</button>
                 </div>
@@ -38,6 +39,10 @@ const Parametres = {
 
                 <div id="tab-categories" class="tab-content">
                     ${this.renderCategories()}
+                </div>
+
+                <div id="tab-produits" class="tab-content">
+                    ${this.renderProduits()}
                 </div>
 
                 <div id="tab-exercice" class="tab-content">
@@ -65,6 +70,7 @@ const Parametres = {
                     <button class="tab active" onclick="Parametres.afficherOnglet('entreprise')">Entreprise</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('plan-comptable')">Plan comptable</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('taxes')">Taxes</button>
+                    <button class="tab" onclick="Parametres.afficherOnglet('produits')">Produits</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('exercice')">Exercice</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('projets')">Projets</button>
                     <button class="tab" onclick="Parametres.afficherOnglet('abonnement')">Abonnement</button>
@@ -80,6 +86,10 @@ const Parametres = {
 
                 <div id="tab-taxes" class="tab-content">
                     ${this.renderTaxes()}
+                </div>
+
+                <div id="tab-produits" class="tab-content">
+                    ${this.renderProduits()}
                 </div>
 
                 <div id="tab-exercice" class="tab-content">
@@ -109,6 +119,9 @@ const Parametres = {
 
         if (onglet === 'projets') {
             document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        }
+        if (onglet === 'produits') {
+            document.getElementById('tab-produits').innerHTML = this.renderProduits();
         }
         if (onglet === 'abonnement') {
             document.getElementById('tab-abonnement').innerHTML = this.renderAbonnement();
@@ -1106,6 +1119,181 @@ const Parametres = {
             Projet.supprimer(id);
             App.notification('Projet supprimé', 'success');
             document.getElementById('tab-projets').innerHTML = this.renderProjets();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    // ========== GESTION DES PRODUITS ==========
+
+    /**
+     * Render la liste des produits
+     */
+    renderProduits() {
+        const produits = Produit.getAll();
+
+        let tableRows = '';
+        produits.forEach(p => {
+            const prix = p.prixUnitaire.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' $';
+            const styleInactif = p.actif === false ? ' style="opacity: 0.5"' : '';
+            tableRows += `
+                <tr${styleInactif}>
+                    <td><strong>${App.escapeHtml(p.nom)}</strong></td>
+                    <td>${App.escapeHtml(p.description || '-')}</td>
+                    <td class="text-right">${prix}</td>
+                    <td class="text-center">
+                        <button class="btn btn-secondary" onclick="Parametres.modifierProduit('${p.id}')">Modifier</button>
+                        <button class="btn btn-danger" onclick="Parametres.supprimerProduit('${p.id}')">Suppr</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        return `
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="Parametres.nouveauProduit()">+ Nouveau produit</button>
+                <input type="text" class="search-input" placeholder="Rechercher un produit..."
+                    onkeyup="Parametres.filtrerProduits(this.value)">
+            </div>
+
+            <div class="table-container">
+                <table id="table-produits">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Description</th>
+                            <th class="text-right">Prix unitaire</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows || '<tr><td colspan="4" class="text-center">Aucun produit</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    /**
+     * Filtre les produits dans le tableau
+     */
+    filtrerProduits(terme) {
+        const rows = document.querySelectorAll('#table-produits tbody tr');
+        const termeLower = terme.toLowerCase();
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(termeLower) ? '' : 'none';
+        });
+    },
+
+    /**
+     * Ouvre le formulaire nouveau produit
+     */
+    nouveauProduit() {
+        App.ouvrirModal('Nouveau produit', `
+            <form id="form-produit" onsubmit="Parametres.sauvegarderProduit(event)">
+                <div class="form-group">
+                    <label>Nom du produit/service *</label>
+                    <input type="text" id="produit-nom" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="produit-description" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prix unitaire *</label>
+                    <input type="number" id="produit-prix" step="0.01" min="0" required>
+                </div>
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Sauvegarde un nouveau produit
+     */
+    sauvegarderProduit(event) {
+        event.preventDefault();
+
+        try {
+            Produit.creer({
+                nom: document.getElementById('produit-nom').value.trim(),
+                description: document.getElementById('produit-description').value.trim(),
+                prixUnitaire: document.getElementById('produit-prix').value
+            });
+
+            App.fermerModal();
+            App.notification('Produit créé avec succès', 'success');
+            document.getElementById('tab-produits').innerHTML = this.renderProduits();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Ouvre le formulaire de modification d'un produit
+     */
+    modifierProduit(id) {
+        const p = Produit.getById(id);
+        if (!p) return;
+
+        App.ouvrirModal('Modifier le produit', `
+            <form id="form-produit-edit" onsubmit="Parametres.sauvegarderModifProduit(event, '${id}')">
+                <div class="form-group">
+                    <label>Nom du produit/service *</label>
+                    <input type="text" id="produit-nom" value="${App.escapeHtml(p.nom)}" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="produit-description" rows="2">${App.escapeHtml(p.description || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Prix unitaire *</label>
+                    <input type="number" id="produit-prix" value="${p.prixUnitaire}" step="0.01" min="0" required>
+                </div>
+                <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        `);
+    },
+
+    /**
+     * Sauvegarde les modifications d'un produit
+     */
+    sauvegarderModifProduit(event, id) {
+        event.preventDefault();
+
+        try {
+            Produit.modifier(id, {
+                nom: document.getElementById('produit-nom').value.trim(),
+                description: document.getElementById('produit-description').value.trim(),
+                prixUnitaire: document.getElementById('produit-prix').value
+            });
+
+            App.fermerModal();
+            App.notification('Produit modifié avec succès', 'success');
+            document.getElementById('tab-produits').innerHTML = this.renderProduits();
+        } catch (e) {
+            App.notification(e.message, 'danger');
+        }
+    },
+
+    /**
+     * Supprime un produit
+     */
+    supprimerProduit(id) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit?')) return;
+
+        try {
+            Produit.supprimer(id);
+            App.notification('Produit supprimé', 'success');
+            document.getElementById('tab-produits').innerHTML = this.renderProduits();
         } catch (e) {
             App.notification(e.message, 'danger');
         }

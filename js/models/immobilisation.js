@@ -55,6 +55,69 @@ const Immobilisation = {
     },
 
     /**
+     * Retourne la catégorie associée à un numéro de compte actif
+     */
+    getCategorieByCompte(compteNumero) {
+        return this.CATEGORIES.find(c => c.compteActif === compteNumero);
+    },
+
+    /**
+     * Synchronise les immobilisations à partir des transactions comptables.
+     * Toute écriture débitant un compte d'actif immobilisé (1500, 1520, etc.)
+     * génère automatiquement une fiche d'immobilisation si elle n'existe pas déjà.
+     */
+    syncFromTransactions() {
+        const transactions = Transaction.getAll();
+        const immobilisations = this.getAll();
+
+        // Construire la table des comptes d'actif immobilisé
+        const comptesActif = {};
+        this.CATEGORIES.forEach(cat => {
+            comptesActif[cat.compteActif] = cat;
+        });
+
+        let modified = false;
+
+        transactions.forEach(trans => {
+            // Ignorer les écritures d'amortissement
+            if (trans.module === 'immobilisations') return;
+
+            trans.lignes.forEach((ligne, index) => {
+                // Seulement les débits sur des comptes d'actif immobilisé
+                if (ligne.debit > 0 && comptesActif[ligne.compte]) {
+                    // Vérifier si une immobilisation est déjà liée à cette ligne
+                    const existe = immobilisations.some(immo =>
+                        immo.sourceTransactionId === trans.id &&
+                        immo.sourceLigneIndex === index
+                    );
+
+                    if (!existe) {
+                        const categorie = comptesActif[ligne.compte];
+                        immobilisations.push({
+                            id: Storage.generateId(),
+                            description: trans.description,
+                            categorieId: categorie.id,
+                            dateAcquisition: trans.date,
+                            cout: ligne.debit,
+                            compteActif: categorie.compteActif,
+                            compteAmortCumule: categorie.compteAmortCumule,
+                            disposition: null,
+                            sourceTransactionId: trans.id,
+                            sourceLigneIndex: index,
+                            dateCreation: new Date().toISOString()
+                        });
+                        modified = true;
+                    }
+                }
+            });
+        });
+
+        if (modified) {
+            Storage.set('immobilisations', immobilisations);
+        }
+    },
+
+    /**
      * Crée une nouvelle immobilisation
      */
     creer(immo) {

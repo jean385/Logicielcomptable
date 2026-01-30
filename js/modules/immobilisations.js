@@ -10,6 +10,8 @@ const Immobilisations = {
     afficher() {
         // Vérifier que les comptes nécessaires existent
         Immobilisation.verifierComptes();
+        // Synchroniser les immobilisations depuis les transactions comptables
+        Immobilisation.syncFromTransactions();
 
         App.afficherPage('module-immobilisations');
 
@@ -224,10 +226,6 @@ const Immobilisations = {
         }
 
         return `
-            <div style="margin-bottom: 20px;">
-                <button class="btn btn-primary" onclick="Immobilisations.ajouterImmo()">+ Ajouter une immobilisation</button>
-            </div>
-
             <div class="table-container">
                 <table>
                     <thead>
@@ -247,65 +245,6 @@ const Immobilisations = {
                 </table>
             </div>
         `;
-    },
-
-    /**
-     * Affiche le formulaire d'ajout d'immobilisation
-     */
-    ajouterImmo() {
-        const categoriesOptions = Immobilisation.CATEGORIES.map(c =>
-            `<option value="${c.id}">${c.nom} (${c.taux}%)</option>`
-        ).join('');
-
-        App.ouvrirModal('Ajouter une immobilisation', `
-            <form onsubmit="Immobilisations.sauvegarderImmo(event)">
-                <div class="form-group">
-                    <label>Description *</label>
-                    <input type="text" id="immo-description" required placeholder="Description de l'actif">
-                </div>
-                <div class="form-group">
-                    <label>Catégorie *</label>
-                    <select id="immo-categorie" required>
-                        <option value="">Sélectionner une catégorie</option>
-                        ${categoriesOptions}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date d'acquisition *</label>
-                    <input type="date" id="immo-date" required value="${Storage.aujourdhui()}">
-                </div>
-                <div class="form-group">
-                    <label>Coût *</label>
-                    <input type="number" id="immo-cout" required step="0.01" min="0.01" placeholder="0.00">
-                </div>
-                <div style="text-align: right; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="App.fermerModal()">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </div>
-            </form>
-        `);
-    },
-
-    /**
-     * Sauvegarde une nouvelle immobilisation
-     */
-    sauvegarderImmo(event) {
-        event.preventDefault();
-
-        try {
-            Immobilisation.creer({
-                description: document.getElementById('immo-description').value,
-                categorieId: document.getElementById('immo-categorie').value,
-                dateAcquisition: document.getElementById('immo-date').value,
-                cout: document.getElementById('immo-cout').value
-            });
-
-            App.fermerModal();
-            App.notification('Immobilisation ajoutée avec succès', 'success');
-            this.afficherOnglet('liste');
-        } catch (e) {
-            App.notification(e.message, 'danger');
-        }
     },
 
     /**

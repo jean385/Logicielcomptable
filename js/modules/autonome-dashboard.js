@@ -50,24 +50,7 @@ const AutonomeDashboard = {
                 <canvas id="chart-autonome" height="250"></canvas>
             </div>
 
-            <!-- Tuiles modules -->
-            <div class="modules-grid autonome-modules-grid">
-                <button class="module-btn" onclick="AutonomeRevenus.afficher()">
-                    <span class="module-icon">💰</span>
-                    <span class="module-name">Revenus</span>
-                    <span class="module-desc">Suivi de vos revenus</span>
-                </button>
-                <button class="module-btn" onclick="AutonomeDepenses.afficher()">
-                    <span class="module-icon">💸</span>
-                    <span class="module-name">Dépenses</span>
-                    <span class="module-desc">Suivi de vos dépenses</span>
-                </button>
-                <button class="module-btn" onclick="AutonomeFactures.afficher()">
-                    <span class="module-icon">📄</span>
-                    <span class="module-name">Facturation</span>
-                    <span class="module-desc">Factures simplifiées</span>
-                </button>
-            </div>
+            <!-- Navigation via sidebar -->
         `;
 
         this.renderChart();

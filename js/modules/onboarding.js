@@ -8,9 +8,9 @@ const Onboarding = {
     _etapes: [
         {
             titre: 'Panneau de navigation',
-            description: 'Accomplissez plus en moins de temps. Utilisez les modules pour naviguer rapidement d\'un module à l\'autre.',
-            cible: '.modules-grid',
-            position: 'bottom'
+            description: 'Accomplissez plus en moins de temps. Utilisez la barre latérale pour naviguer rapidement d\'un module à l\'autre.',
+            cible: '#sidebar',
+            position: 'right'
         },
         {
             titre: 'Activités récentes',
@@ -39,8 +39,8 @@ const Onboarding = {
         {
             titre: 'Paramètres',
             description: 'Explorez une vaste gamme de paramètres et personnalisez MonBilanFinancier pour votre organisation.',
-            cible: '.module-btn[onclick*="Parametres"]',
-            position: 'bottom'
+            cible: '.sidebar-item[data-page="module-parametres"]',
+            position: 'right'
         },
         {
             titre: 'Assistance',
@@ -211,6 +211,10 @@ const Onboarding = {
             top = rect.top - gap - 200; // estimation
             left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
             arrow.classList.add('arrow-bottom');
+        } else if (etape.position === 'right') {
+            top = rect.top + (rect.height / 2) - 100; // estimation centered
+            left = rect.right + gap;
+            arrow.classList.add('arrow-left');
         }
 
         // Contraindre dans la fenêtre
@@ -228,10 +232,17 @@ const Onboarding = {
             });
         }
 
-        // Positionner la flèche horizontalement
-        const arrowLeft = rect.left + (rect.width / 2) - left - 7;
-        arrow.style.left = Math.max(20, Math.min(arrowLeft, tooltipWidth - 20)) + 'px';
-        arrow.style.marginLeft = '0';
+        // Positionner la flèche
+        if (etape.position === 'right') {
+            // Arrow on left side, vertically centered
+            arrow.style.left = '-7px';
+            arrow.style.top = '40px';
+            arrow.style.marginLeft = '0';
+        } else {
+            const arrowLeft = rect.left + (rect.width / 2) - left - 7;
+            arrow.style.left = Math.max(20, Math.min(arrowLeft, tooltipWidth - 20)) + 'px';
+            arrow.style.marginLeft = '0';
+        }
     },
 
     /**

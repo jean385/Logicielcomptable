@@ -331,6 +331,18 @@ const App = {
     },
 
     /**
+     * Ouvre le menu avec le formulaire de connexion
+     */
+    afficherConnexionMenu() {
+        document.getElementById('form-connexion').style.display = '';
+        document.getElementById('form-inscription').style.display = 'none';
+        document.getElementById('ecran-prix').style.display = 'none';
+        document.getElementById('ecran-abonnement-requis').style.display = 'none';
+        document.getElementById('login-erreur').style.display = 'none';
+        this.openAuthMenu();
+    },
+
+    /**
      * Bascule le menu déroulant d'authentification
      */
     toggleAuthMenu() {

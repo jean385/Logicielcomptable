@@ -892,15 +892,11 @@ tr:hover {
     gap: 24px;
 }
 
-.landing-logo {
-    font-size: 22px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: -0.5px;
-}
-
 .landing-auth-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .landing-auth-btn {
@@ -916,6 +912,16 @@ tr:hover {
 
 .landing-auth-btn:hover {
     background: rgba(255, 255, 255, 0.25);
+}
+
+.landing-auth-btn-accent {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.landing-auth-btn-accent:hover {
+    background: var(--accent-dark);
+    border-color: var(--accent-dark);
 }
 
 /* Menu déroulant d'authentification */
@@ -950,7 +956,7 @@ tr:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: url('../pomelli_image.png') center center / cover no-repeat;
+    background: url('../hero-bg.jpg') center center / cover no-repeat;
     text-align: center;
     padding: 80px 20px;
 }
@@ -961,7 +967,7 @@ tr:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.55);
 }
 
 .landing-hero-content {
@@ -1590,24 +1596,78 @@ tr:hover {
         grid-template-columns: 1fr !important;
     }
 
+    /* Landing page mobile */
+    .landing-nav {
+        padding: 0 12px;
+        height: 48px;
+    }
+
+    .landing-auth-wrapper {
+        gap: 6px;
+    }
+
+    .landing-auth-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .auth-dropdown {
+        position: fixed;
+        top: 48px;
+        left: 0;
+        right: 0;
+        width: auto;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .landing-hero {
+        padding: 60px 16px;
+        min-height: 80vh;
+    }
+
     .landing-hero-content h1 {
-        font-size: 32px;
+        font-size: 28px;
+        margin-bottom: 16px;
     }
 
     .landing-hero-subtitle {
-        font-size: 16px;
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+
+    .btn-cta {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .landing-features {
+        padding: 48px 16px;
+    }
+
+    .landing-section-title {
+        font-size: 22px;
+        margin-bottom: 28px;
     }
 
     .landing-features-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
-    .auth-dropdown {
-        width: 290px;
+    .landing-feature-card {
+        padding: 20px;
+    }
+
+    .landing-pricing {
+        padding: 48px 16px;
     }
 
     .landing-pricing-card {
-        padding: 24px;
+        padding: 24px 20px;
+    }
+
+    .landing-pricing-amount {
+        font-size: 36px;
     }
 
     .mode-selection {

@@ -39,11 +39,20 @@ const PdfFacture = {
         const enteteStartY = y;
         let logoEndX = margin;
 
-        // Logo (si présent)
+        // Logo (si présent, avec ratio proportionnel)
         if (logo) {
             try {
-                doc.addImage(logo, 'PNG', margin, y, 40, 20);
-                logoEndX = margin + 45;
+                const img = new Image();
+                img.src = logo;
+                const maxW = 45;
+                const maxH = 25;
+                let logoW = img.width || maxW;
+                let logoH = img.height || maxH;
+                const ratio = Math.min(maxW / logoW, maxH / logoH);
+                logoW = logoW * ratio;
+                logoH = logoH * ratio;
+                doc.addImage(logo, 'PNG', margin, y, logoW, logoH);
+                logoEndX = margin + logoW + 5;
             } catch (e) {
                 console.warn('Erreur chargement logo:', e);
                 logoEndX = margin;
